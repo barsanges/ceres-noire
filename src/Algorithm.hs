@@ -48,7 +48,7 @@ boundary total inventory = if total <= 0
   where
     -- The fact that the sequence is sorted may speed up the algorithm in
     -- some cases.
-    inventory' = sortBy (\ x y -> compare (price x) (price y)) inventory
+    inventory' = sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
 
 -- | Recursively find the boundary of the set of admissible solutions.
 boundary' :: Float -> Seq StampSet -> PartialSolution -> [Solution]
