@@ -1,0 +1,28 @@
+name:                ceres-noire
+version:             0.1.0
+license:             GPL-3.0
+author:              barsanges
+maintainer:          https://github.com/barsanges
+copyright:           2021 barsanges
+
+extra-source-files:
+- README.md
+
+synopsis:            Choose the least costly combination of stamps for a letter
+description:         Please see the README
+
+dependencies:
+- base
+- bytestring
+- cassava
+- containers
+- optparse-applicative
+- vector
+
+library:
+  source-dirs: src
+
+executables:
+  cn:
+    source-dirs:      src
+    main:             Main.hs
