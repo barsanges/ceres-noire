@@ -16,7 +16,9 @@ module Algorithm (
 
 import Data.Foldable ( toList )
 import Data.List ( minimumBy, intercalate )
-import Data.Sequence ( Seq(..), (|>), (><), sortBy )
+import qualified Data.List as L
+import Data.Sequence ( Seq(..), (|>), (><) )
+import qualified Data.Sequence as S
 import Numeric ( showFFloat )
 import StampSet
 
@@ -44,11 +46,13 @@ toCompleteSolution (Partial used left) untouched = Complete total used (left >< 
 boundary :: Float -> Seq StampSet -> Either String [Solution]
 boundary total inventory = if total <= 0
   then Left "The total cost should be a positive float!"
-  else Right (boundary' total inventory' (Partial Empty Empty))
+  else Right (L.sortBy go (boundary' total inventory' (Partial Empty Empty)))
   where
+    go :: Solution -> Solution -> Ordering
+    go (Complete x _ _) (Complete y _ _) = compare x y
     -- The fact that the sequence is sorted may speed up the algorithm in
     -- some cases.
-    inventory' = sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
+    inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
 
 -- | Recursively find the boundary of the set of admissible solutions.
 boundary' :: Float -> Seq StampSet -> PartialSolution -> [Solution]
@@ -74,13 +78,13 @@ boundary' total (s :<| stampSets) tmp = case stampSets of
 optimum :: Float -> Seq StampSet -> Either String Solution
 optimum total inventory = case res of
   Left msg -> Left msg
-  Right b -> if null b
-    then Left "The problem is infeasible!"
-    else Right $ minimumBy go b
+  Right b -> case b of
+    [] -> Left "The problem is infeasible!"
+    (x:_) -> Right x
   where
-    res = boundary total inventory -- FIXME: define a specific algorithm for the optimum.
-    go :: Solution -> Solution -> Ordering
-    go (Complete x _ _) (Complete y _ _) = compare x y
+    -- With a specific algorithm for the optimum, it would be possible to stop
+    -- the exploration of branches when they appear suboptimal.
+    res = boundary total inventory
 
 -- | Turn a solution into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation.
