@@ -16,7 +16,7 @@ module Algorithm (
 
 import Data.Foldable ( toList )
 import Data.List ( minimumBy, intercalate )
-import Data.Sequence ( Seq(..), (|>), (><) )
+import Data.Sequence ( Seq(..), (|>), (><), sortBy )
 import Numeric ( showFFloat )
 import StampSet
 
@@ -44,7 +44,11 @@ toCompleteSolution (Partial used left) untouched = Complete total used (left >< 
 boundary :: Float -> Seq StampSet -> Either String [Solution]
 boundary total inventory = if total <= 0
   then Left "The total cost should be a positive float!"
-  else Right (boundary' total inventory (Partial Empty Empty))
+  else Right (boundary' total inventory' (Partial Empty Empty))
+  where
+    -- The fact that the sequence is sorted may speed up the algorithm in
+    -- some cases.
+    inventory' = sortBy (\ x y -> compare (price x) (price y)) inventory
 
 -- | Recursively find the boundary of the set of admissible solutions.
 boundary' :: Float -> Seq StampSet -> PartialSolution -> [Solution]
