@@ -15,7 +15,7 @@ module Algorithm (
   ) where
 
 import Data.Foldable ( toList )
-import Data.List ( minimumBy, intercalate )
+import Data.List ( intercalate )
 import qualified Data.List as L
 import Data.Sequence ( Seq(..), (|>), (><) )
 import qualified Data.Sequence as S
