@@ -66,13 +66,23 @@ split (StampSet p q) n = if (n <= q) && (n >= 0)
   else (StampSet p 0, StampSet p q)
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
-readInventory :: BL.ByteString -> Either String (Seq StampSet)
-readInventory bs = case Csv.decodeByName bs of
+fromByteString :: BL.ByteString -> Either String (Seq StampSet)
+fromByteString bs = case Csv.decodeByName bs of
   Left msg -> Left msg
   Right (_, x) -> Right ((fromList . V.toList) x)
 
+-- | Read a sequence of stamp sets from a CSV file.
+readInventory :: String -> IO (Either String (Seq StampSet))
+readInventory fname = do
+  csvData <- BL.readFile fname
+  return (fromByteString csvData)
+
 -- | Turn a sequence of stamp sets to a CSV-like bytestring.
-writeInventory :: (Seq StampSet) -> BL.ByteString
-writeInventory stamps = Csv.encodeByName header (toList stamps)
+toByteString :: (Seq StampSet) -> BL.ByteString
+toByteString stamps = Csv.encodeByName header (toList stamps)
   where
     header = V.fromList ["price", "quantity"]
+
+-- | Read a sequence of stamp sets to a CSV file.
+writeInventory :: String -> (Seq StampSet) -> IO ()
+writeInventory fname stamps = BL.writeFile fname (toByteString stamps)

@@ -8,7 +8,6 @@ Parses command-line options and solves the postage cost problem.
 
 module Main where
 
-import qualified Data.ByteString.Lazy as BL
 import Options.Applicative
 import StampSet
 import Algorithm
@@ -64,8 +63,7 @@ args = info (argsParser <**> helper)
 main :: IO ()
 main = do
   cli <- execParser args
-  csvData <- BL.readFile (fin cli)
-  let maybeInventory = readInventory csvData
+  maybeInventory <- readInventory (fin cli)
   case maybeInventory of
     Left err -> putStrLn err
     Right inventory -> if usage cli == Boundary
@@ -81,7 +79,7 @@ main = do
             Yes -> (update opt)
             _ -> return ()
       where
-        update x = BL.writeFile (fin cli) (writeInventory . resultingInventory $ x)
+        update x = writeInventory (fin cli) (resultingInventory x)
 
 -- | Ask for confirmation before performing an action.
 confirm :: String -> IO () -> IO ()
