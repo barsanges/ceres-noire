@@ -10,11 +10,15 @@ Stamps and sequences of stamps for the postage cost problem.
 
 module StampSet (
   StampSet,
-  mkStamp,
+  mkStampSet,
   price,
   quantity,
   split,
+  almostEqual,
+  almostEqualSeq,
+  fromByteString,
   readInventory,
+  toByteString,
   writeInventory
   ) where
 
@@ -22,6 +26,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
 import Data.Foldable ( toList )
 import Data.Sequence ( Seq, fromList )
+import qualified Data.Sequence as S
 import qualified Data.Vector as V
 
 -- | A set of similar stamps is defined by the unitary price of the price, and
@@ -32,7 +37,7 @@ instance Csv.FromNamedRecord StampSet where
   parseNamedRecord r = do
     p <- Csv.lookup r "price"
     q <- Csv.lookup r "quantity"
-    let s = mkStamp p q
+    let s = mkStampSet p q
     case s of
       Just stampSet -> return stampSet
       Nothing -> fail "Invalid data!" -- FIXME: improve the error message.
@@ -43,8 +48,8 @@ instance Csv.ToNamedRecord StampSet where
     Csv.namedField "quantity" q]
 
 -- | Create a set of stamp.
-mkStamp :: Float -> Int -> Maybe StampSet
-mkStamp p q = if (p > 0) && (q > 0)
+mkStampSet :: Float -> Int -> Maybe StampSet
+mkStampSet p q = if (p > 0) && (q > 0)
   then Just (StampSet p q)
   else Nothing
 
@@ -64,6 +69,16 @@ split :: StampSet -> Int -> (StampSet, StampSet)
 split (StampSet p q) n = if (n <= q) && (n >= 0)
   then (StampSet p n, StampSet p (q - n))
   else (StampSet p 0, StampSet p q)
+
+-- | Test if two stamp sets are equal (float precision: 1e-12).
+almostEqual :: StampSet -> StampSet -> Bool
+almostEqual (StampSet p q) (StampSet p' q') = (abs (p - p') < 1e-12) && (q == q')
+
+-- | Test if two sequences of stamp sets are equal (float precision: 1e-12).
+almostEqualSeq :: Seq StampSet -> Seq StampSet -> Bool
+almostEqualSeq x y = if (length x) == (length y)
+  then foldr (&&) True (S.zipWith almostEqual x y)
+  else False
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
 fromByteString :: BL.ByteString -> Either String (Seq StampSet)

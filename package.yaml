@@ -26,3 +26,12 @@ executables:
   cn:
     source-dirs:      src
     main:             Main.hs
+
+tests:
+  ceres-noire-test:
+    main:                Spec.hs
+    source-dirs:         test
+    dependencies:
+    - ceres-noire
+    - hspec
+    - QuickCheck
