@@ -1,0 +1,37 @@
+# From: https://kodimensional.dev/github-actions
+name: CI
+
+# Trigger the workflow on push or pull request
+on: [push, pull_request]
+
+jobs:
+  stack:
+    name: stack / ghc ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack: ["2.3.1"]
+        ghc: ["8.8.3"]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-haskell@v1.1
+      name: Setup Haskell Stack
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        stack-version: ${{ matrix.stack }}
+
+    - uses: actions/cache@v1
+      name: Cache ~/.stack
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-${{ matrix.ghc }}-stack
+
+    - name: Build
+      run: |
+        stack build --system-ghc --test --no-run-tests
+
+    - name: Test
+      run: |
+        stack test --system-ghc
