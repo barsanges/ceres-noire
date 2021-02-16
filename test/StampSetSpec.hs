@@ -86,6 +86,9 @@ spec = do
     it "fails if the string contains no data" $
       ((fromByteString "price,quantity") `eitherEqual` (Left "parse error (not enough input) at \"\"")) `shouldBe` True
 
+    it "fails if the string contains negative values" $
+      ((fromByteString "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")) `shouldBe` True
+
   describe "toByteString" $ do
     it "converts a sequence of stamp sets to a byte string" $
       toByteString sq1 `shouldBe` "price,quantity\r\n1.1,2\r\n2.2,1\r\n"
