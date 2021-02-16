@@ -18,6 +18,12 @@ import Data.Sequence ( Seq, fromList )
 
 import StampSet
 
+instance Arbitrary StampSet where
+  arbitrary = do
+    p <- arbitrary
+    q <- arbitrary
+    return (fromJust (mkStampSet (1e-9 + abs p) (abs q)))
+
 s1 :: StampSet
 s1 = fromJust (mkStampSet 1.1 2)
 
@@ -40,20 +46,26 @@ spec :: Spec
 spec = do
   describe "almostEqual" $ do
     it "compares two sets of stamps (1)" $
-      (s1 `almostEqual` s1) `shouldBe` True -- FIXME: could be a property.
+      (s1 `almostEqual` s1) `shouldBe` True
 
     it "compares two sets of stamps (2)" $
       (s1 `almostEqual` s2) `shouldBe` False
 
+    it "always return True when comparing a stamp set with itself" $ property $
+      \ x -> x `almostEqual` x
+
   describe "almostEqualSeq" $ do
     it "compares two sequences of stamp sets (1)" $
-      (sq1 `almostEqualSeq` sq1)  `shouldBe` True -- FIXME: could be a property.
+      (sq1 `almostEqualSeq` sq1)  `shouldBe` True
 
     it "compares two sequences of stamp sets (2)" $
       (sq1 `almostEqualSeq` (fromList [s1, s3]))  `shouldBe` False
 
     it "compares two sequences of stamp sets (3)" $
       (sq1 `almostEqualSeq` (fromList [s1]))  `shouldBe` False
+
+    it "always return True when comparing a sequence of stamp set with itself" $ property $
+      \ x -> x `almostEqualSeq` x
 
   describe "fromByteString" $ do
     it "converts a byte string to a sequence of stamp sets" $
