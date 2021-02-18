@@ -7,11 +7,14 @@ Solve the postage cost problem.
 -}
 
 module Algorithm (
+  Solution,
   boundary,
   reprBoundary,
   optimum,
   reprSolution,
-  resultingInventory
+  resultingInventory,
+  almostEqualSol,
+  almostEqualBoundary
   ) where
 
 import Data.Foldable ( toList )
@@ -27,6 +30,23 @@ data PartialSolution = Partial (Seq StampSet) (Seq StampSet)
 
 -- | A solution of a postage cost problem.
 data Solution = Complete Double (Seq StampSet) (Seq StampSet)
+  deriving Show
+
+-- | Test if two solutions are equal (float precision: 1e-12). For test purpose
+-- only.
+almostEqualSol :: Solution -> (Double, Seq StampSet, Seq StampSet) -> Bool
+almostEqualSol (Complete t used left) (t', used', left') = cond1 && cond2 && cond3
+  where
+    cond1 = (abs (t - t') < 1e-12)
+    cond2 = almostEqualSeq used used'
+    cond3 = almostEqualSeq left left'
+
+-- | Test if two lists of solutions are equal (float precision: 1e-12). For
+-- test purpose only.
+almostEqualBoundary :: [Solution] -> [(Double, Seq StampSet, Seq StampSet)] -> Bool
+almostEqualBoundary x y = if (length x) == (length y)
+  then foldr (&&) True (zipWith almostEqualSol x y)
+  else False
 
 -- | Add a stamp set to a partial solution.
 add :: PartialSolution -> StampSet -> Int -> PartialSolution
