@@ -64,7 +64,7 @@ boundary' total (s :<| stampSets) tmp = case stampSets of
   Empty -> if n <= q
     then [toCompleteSolution (add tmp s n) Empty]
     else []
-  _ -> concat [ go i | i <- [0..n] ] -- FIXME: use something else than a list?
+  _ -> concat [ go i | i <- [0..(min q n)] ] -- FIXME: use something else than a list?
   where
     p = price s
     q = quantity s
