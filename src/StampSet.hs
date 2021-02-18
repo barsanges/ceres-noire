@@ -31,7 +31,7 @@ import qualified Data.Vector as V
 
 -- | A set of similar stamps is defined by the unitary price of the price, and
 -- the quantity of stamps in the set.
-data StampSet = StampSet Float Int
+data StampSet = StampSet Double Int
   deriving Show
 
 instance Csv.FromNamedRecord StampSet where
@@ -49,13 +49,13 @@ instance Csv.ToNamedRecord StampSet where
     Csv.namedField "quantity" q]
 
 -- | Create a set of stamp.
-mkStampSet :: Float -> Int -> Maybe StampSet
+mkStampSet :: Double -> Int -> Maybe StampSet
 mkStampSet p q = if (p > 0) && (q >= 0)
   then Just (StampSet p q)
   else Nothing
 
 -- | Get the unitary price of a stamp.
-price :: StampSet -> Float
+price :: StampSet -> Double
 price (StampSet p _) = p
 
 -- | Get the available number of stamps in a set of stamps.

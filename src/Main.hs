@@ -17,7 +17,7 @@ data Usage = Ask | DryRun | Yes | Boundary
   deriving Eq
 
 -- | Command line arguments.
-data Args = Args { totalCost :: Float, fin :: String, usage :: Usage }
+data Args = Args { totalCost :: Double, fin :: String, usage :: Usage }
 
 argsParser :: Parser Args
 argsParser = Args

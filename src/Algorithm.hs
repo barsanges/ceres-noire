@@ -26,7 +26,7 @@ import StampSet
 data PartialSolution = Partial (Seq StampSet) (Seq StampSet)
 
 -- | A solution of a postage cost problem.
-data Solution = Complete Float (Seq StampSet) (Seq StampSet)
+data Solution = Complete Double (Seq StampSet) (Seq StampSet)
 
 -- | Add a stamp set to a partial solution.
 add :: PartialSolution -> StampSet -> Int -> PartialSolution
@@ -39,11 +39,11 @@ toCompleteSolution :: PartialSolution -> Seq StampSet -> Solution
 toCompleteSolution (Partial used left) untouched = Complete total used (left >< untouched)
   where
     total = sum (fmap go used)
-    go :: StampSet -> Float
+    go :: StampSet -> Double
     go s = price s * (fromIntegral . quantity $ s)
 
 -- | Find the boundary of the set of admissible solutions.
-boundary :: Float -> Seq StampSet -> Either String [Solution]
+boundary :: Double -> Seq StampSet -> Either String [Solution]
 boundary total inventory = if total <= 0
   then Left "The total cost should be a positive float!"
   else if null sols
@@ -58,7 +58,7 @@ boundary total inventory = if total <= 0
     inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
 
 -- | Recursively find the boundary of the set of admissible solutions.
-boundary' :: Float -> Seq StampSet -> PartialSolution -> [Solution]
+boundary' :: Double -> Seq StampSet -> PartialSolution -> [Solution]
 boundary' _ Empty _ = []
 boundary' total (s :<| stampSets) tmp = case stampSets of
   Empty -> if n <= q
@@ -78,7 +78,7 @@ boundary' total (s :<| stampSets) tmp = case stampSets of
         tmp' = add tmp s k
 
 -- | Find the optimal solution of the postage cost problem.
-optimum :: Float -> Seq StampSet -> Either String Solution
+optimum :: Double -> Seq StampSet -> Either String Solution
 optimum total inventory = case res of
   Left msg -> Left msg
   Right b -> case b of
