@@ -46,8 +46,11 @@ toCompleteSolution (Partial used left) untouched = Complete total used (left >< 
 boundary :: Float -> Seq StampSet -> Either String [Solution]
 boundary total inventory = if total <= 0
   then Left "The total cost should be a positive float!"
-  else Right (L.sortBy go (boundary' total inventory' (Partial Empty Empty)))
+  else if null sols
+    then Left "The problem is infeasible!"
+    else Right (L.sortBy go sols)
   where
+    sols = boundary' total inventory' (Partial Empty Empty)
     go :: Solution -> Solution -> Ordering
     go (Complete x _ _) (Complete y _ _) = compare x y
     -- The fact that the sequence is sorted may speed up the algorithm in
