@@ -12,6 +12,7 @@ module Algorithm (
   reprBoundary,
   optimum,
   reprSolution,
+  solutionCost,
   resultingInventory,
   almostEqualSol,
   almostEqualBoundary
@@ -123,6 +124,10 @@ reprSolution (Complete total used _) = (fmtFloat total) $ " EUR (" ++ stamps ++ 
 -- is not exhaustive and should not be used for serialisation.
 reprBoundary :: [Solution] -> String
 reprBoundary xs = intercalate "\n" (fmap reprSolution xs)
+
+-- | Get the total cost of a solution.
+solutionCost :: Solution -> Double
+solutionCost (Complete t _ _) = t
 
 -- | Get the sets of stamps left after solving a problem.
 resultingInventory :: Solution -> Seq StampSet
