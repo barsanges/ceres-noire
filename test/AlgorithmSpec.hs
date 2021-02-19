@@ -17,6 +17,12 @@ import Data.Sequence ( Seq(..), fromList )
 import Algorithm
 import StampSet
 
+instance Arbitrary StampSet where
+  arbitrary = do
+    p <- arbitrary
+    q <- arbitrary
+    return (fromJust (mkStampSet (1e-9 + abs p) (abs q)))
+
 s1 :: StampSet
 s1 = fromJust (mkStampSet 1.05 3)
 
@@ -75,6 +81,22 @@ boundary1 = [(1.10,
                         fromJust (mkStampSet 1.05 1),
                         fromJust (mkStampSet 0.05 4)])]
 
+propTotalCost :: Double -> Seq StampSet -> Bool
+propTotalCost x inventory = case optimum x' inventory of
+  Left _ -> True -- FIXME: find a way to dismiss these results.
+  Right sol -> solutionCost sol >= x'
+  where
+    x' = 0.01 + abs x
+
+propResultingInventory :: Double -> Seq StampSet -> Bool
+propResultingInventory x inventory = case optimum x' inventory of
+  Left _ -> True -- FIXME: find a way to dismiss these results.
+  Right sol -> foldr go True (resultingInventory sol)
+  where
+    x' = 0.01 + abs x
+    go :: StampSet -> Bool -> Bool
+    go s b = b && (quantity s >= 0)
+
 spec :: Spec
 spec = do
   describe "boundary" $ do
@@ -108,3 +130,11 @@ spec = do
 
     it "should always fail if the total cost < 0" $ property $
       \ x -> ((optimum (-(abs x)) Empty) `eitherEqual` (Left "The total cost should be a positive float!"))
+
+    -- TODO propriété : s'il y a une solution, le coût total est toujours supérieur ou égal au coût de la lettre
+    it "should always give a solution (if it exists) with a cost greater or equal to the cost of the letter" $ property $
+      propTotalCost
+
+    -- TODO propriété : s'il y a une solution, l'inventaire résultant contient toujours un nombre positif ou nul de timbre
+    it "should never return an inventory with a negative number of stamps" $ property $
+      propResultingInventory
