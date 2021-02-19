@@ -87,11 +87,11 @@ spec = do
     it "should fail if the cost is zero" $
       ((boundary 0 sq1) `eitherEquals` (Left "The total cost should be a positive float!")) `shouldBe` True
 
-    it "should fail if the inventory is empty" $
-      ((boundary 1 Empty) `eitherEquals` (Left "The problem is infeasible!")) `shouldBe` True -- FIXME: turn this into a property.
+    it "should always fail if the inventory is empty" $ property $
+      \ x -> ((boundary (0.001 + abs x) Empty) `eitherEquals` (Left "The problem is infeasible!"))
 
-    it "should fail if the total cost < 0" $
-      ((boundary (-1) Empty) `eitherEquals` (Left "The total cost should be a positive float!")) `shouldBe` True -- FIXME: turn this into a property.
+    it "should always fail if the total cost < 0" $ property $
+      \ x -> ((boundary (-(abs x)) Empty) `eitherEquals` (Left "The total cost should be a positive float!"))
 
   describe "optimum" $ do
     it "choose the least costly combination of stamps for a letter" $
@@ -103,8 +103,8 @@ spec = do
     it "should fail if the cost is zero" $
       ((optimum 0 sq1) `eitherEqual` (Left "The total cost should be a positive float!")) `shouldBe` True
 
-    it "should fail if the inventory is empty" $
-      ((optimum 1 Empty) `eitherEqual` (Left "The problem is infeasible!")) `shouldBe` True -- FIXME: turn this into a property
+    it "should always fail if the inventory is empty" $ property $
+      \ x -> ((optimum (0.001 + abs x) Empty) `eitherEqual` (Left "The problem is infeasible!"))
 
-    it "should fail if the total cost < 0" $
-      ((optimum (-1) Empty) `eitherEqual` (Left "The total cost should be a positive float!")) `shouldBe` True -- FIXME: turn this into a property
+    it "should always fail if the total cost < 0" $ property $
+      \ x -> ((optimum (-(abs x)) Empty) `eitherEqual` (Left "The total cost should be a positive float!"))
