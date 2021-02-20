@@ -2,4 +2,4 @@ resolver: lts-16.0
 packages:
 - .
 ghc-options:
-    "$locals": -Wall
+    "$locals": -O2 -Wall
