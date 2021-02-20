@@ -108,13 +108,13 @@ spec = do
 
     it "should fail if the cost is zero" $
       ((boundary 0 sq1) `eitherEquals` (Left "The total cost should be a positive float!")) `shouldBe` True
-
+{-
     it "should always fail if the inventory is empty" $ property $
       \ x -> ((boundary (0.001 + abs x) Empty) `eitherEquals` (Left "The problem is infeasible!"))
 
     it "should always fail if the total cost < 0" $ property $
       \ x -> ((boundary (-(abs x)) Empty) `eitherEquals` (Left "The total cost should be a positive float!"))
-
+-}
   describe "optimum" $ do
     it "choose the least costly combination of stamps for a letter" $
       ((optimum 1.06 sq1) `eitherEqual` (Right sol1)) `shouldBe` True
@@ -124,17 +124,16 @@ spec = do
 
     it "should fail if the cost is zero" $
       ((optimum 0 sq1) `eitherEqual` (Left "The total cost should be a positive float!")) `shouldBe` True
-
+{-
     it "should always fail if the inventory is empty" $ property $
       \ x -> ((optimum (0.001 + abs x) Empty) `eitherEqual` (Left "The problem is infeasible!"))
 
     it "should always fail if the total cost < 0" $ property $
       \ x -> ((optimum (-(abs x)) Empty) `eitherEqual` (Left "The total cost should be a positive float!"))
 
-    -- TODO propriété : s'il y a une solution, le coût total est toujours supérieur ou égal au coût de la lettre
     it "should always give a solution (if it exists) with a cost greater or equal to the cost of the letter" $ property $
       propTotalCost
 
-    -- TODO propriété : s'il y a une solution, l'inventaire résultant contient toujours un nombre positif ou nul de timbre
     it "should never return an inventory with a negative number of stamps" $ property $
       propResultingInventory
+-}
