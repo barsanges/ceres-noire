@@ -13,6 +13,7 @@ module StampSet (
   mkStampSet,
   price,
   quantity,
+  setValue,
   split,
   almostEqual,
   almostEqualSeq,
@@ -61,6 +62,10 @@ price (StampSet p _) = p
 -- | Get the available number of stamps in a set of stamps.
 quantity :: StampSet -> Int
 quantity (StampSet _ q) = q
+
+-- | Get the total value of set of stamps.
+setValue :: StampSet -> Double
+setValue (StampSet p q) = p * (fromIntegral q)
 
 -- | Split a set of stamps in two different parts, one with 'n' pieces and the
 -- other with the rest. If the operation is not feasible ('n < 0' of 'n' is
