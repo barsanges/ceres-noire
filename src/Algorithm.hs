@@ -21,7 +21,7 @@ module Algorithm (
 import Data.Foldable ( toList )
 import Data.List ( intercalate )
 import qualified Data.List as L
-import Data.Sequence ( Seq(..), (|>), (><) )
+import Data.Sequence ( Seq(..), (<|), (|>), (><) )
 import qualified Data.Sequence as S
 import Numeric ( showFFloat )
 import StampSet
@@ -109,6 +109,14 @@ optimum total inventory = case res of
     -- With a specific algorithm for the optimum, it would be possible to stop
     -- the exploration of branches when they appear suboptimal.
     res = boundary total inventory
+
+-- | Associate the total value of all following sets to each stamp set of the
+-- sequence.
+warmUp :: Seq StampSet -> Seq (Double, StampSet)
+warmUp sq = snd (foldr go (0, Empty) sq)
+  where
+    go :: StampSet -> (Double, Seq (Double, StampSet)) -> (Double, Seq (Double, StampSet))
+    go x (t, s) = (t + setValue x, (t, x) <| s)
 
 -- | Turn a solution into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation.
