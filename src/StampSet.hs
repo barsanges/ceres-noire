@@ -68,7 +68,7 @@ setValue :: StampSet -> Double
 setValue (StampSet p q) = p * (fromIntegral q)
 
 -- | Split a set of stamps in two different parts, one with 'n' pieces and the
--- other with the rest. If the operation is not feasible ('n < 0' of 'n' is
+-- other with the rest. If the operation is not feasible ('n < 0' or 'n' is
 -- larger than the number of stamps available), the first set of the pair is
 -- empty.
 split :: StampSet -> Int -> (StampSet, StampSet)
