@@ -27,7 +27,7 @@ import Numeric ( showFFloat )
 import StampSet
 
 -- | A partial solution of a postage cost problem.
-data PartialSolution = Partial (Seq StampSet) (Seq StampSet)
+data PartialSolution = Partial Double (Seq StampSet) (Seq StampSet)
 
 -- | A solution of a postage cost problem.
 data Solution = Complete Double (Seq StampSet) (Seq StampSet)
@@ -51,17 +51,14 @@ almostEqualBoundary x y = if (length x) == (length y)
 
 -- | Add a stamp set to a partial solution.
 add :: PartialSolution -> StampSet -> Int -> PartialSolution
-add (Partial used left) s n = Partial (used |> s1) (left |> s2)
+add (Partial c used left) s n = Partial c' (used |> s1) (left |> s2)
   where
+    c' = c + (price s) * (fromIntegral n)
     (s1, s2) = split s n
 
 -- | Convert a partial solution to a complete solution.
 toCompleteSolution :: PartialSolution -> Seq StampSet -> Solution
-toCompleteSolution (Partial used left) untouched = Complete total used (left >< untouched)
-  where
-    total = sum (fmap go used)
-    go :: StampSet -> Double
-    go s = price s * (fromIntegral . quantity $ s)
+toCompleteSolution (Partial t used left) untouched = Complete t used (left >< untouched)
 
 -- | Find the boundary of the set of admissible solutions.
 boundary :: Double -> Seq StampSet -> Either String [Solution]
@@ -71,7 +68,7 @@ boundary total inventory = if total <= 0
     then Left "The problem is infeasible!"
     else Right (L.sortBy go sols)
   where
-    sols = boundary' total inventory' (Partial Empty Empty)
+    sols = boundary' total inventory' (Partial 0 Empty Empty)
     go :: Solution -> Solution -> Ordering
     go (Complete x _ _) (Complete y _ _) = compare x y
     -- The fact that the sequence is sorted may speed up the algorithm in
@@ -132,6 +129,10 @@ reprSolution (Complete total used _) = (fmtFloat total) $ " EUR (" ++ stamps ++ 
 -- is not exhaustive and should not be used for serialisation.
 reprBoundary :: [Solution] -> String
 reprBoundary xs = intercalate "\n" (fmap reprSolution xs)
+
+-- | Get the cost of a partial solution.
+currentCost :: PartialSolution -> Double
+currentCost (Partial c _ _) = c
 
 -- | Get the total cost of a solution.
 solutionCost :: Solution -> Double
