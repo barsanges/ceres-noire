@@ -97,15 +97,49 @@ boundary' total (s :<| stampSets) tmp = case stampSets of
 
 -- | Find the optimal solution of the postage cost problem.
 optimum :: Double -> Seq StampSet -> Either String Solution
-optimum total inventory = case res of
-  Left msg -> Left msg
-  Right b -> case b of
-    [] -> Left "The problem is infeasible!"
-    (x:_) -> Right x
+optimum total inventory = if total <= 0
+  then Left "The total cost should be a positive float!"
+  else case maybeSol of
+    Nothing -> Left "The problem is infeasible!"
+    Just sol -> Right sol
   where
-    -- With a specific algorithm for the optimum, it would be possible to stop
-    -- the exploration of branches when they appear suboptimal.
-    res = boundary total inventory
+    maybeSol = optimum' total (warmUp inventory') (Partial 0 Empty Empty) Nothing
+    -- The fact that the sequence is sorted may speed up the algorithm in
+    -- some cases.
+    inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
+
+-- | Recursively find an optimal solution.
+optimum' :: Double -> Seq (Double, StampSet) -> PartialSolution -> Maybe Solution -> Maybe Solution
+optimum' total Empty tmp best = if total <= 0
+  then select best (toCompleteSolution tmp Empty)
+  else best
+optimum' total ((v, s) :<| stampSets) tmp best
+  | keepCurrent best tmp = best
+  | total > setValue s + v = best
+  | otherwise = foldr go best [0..(min q n)]
+  where
+    p = price s
+    q = quantity s
+    n = ceiling (total / p)
+    go :: Int -> Maybe Solution -> Maybe Solution
+    go k b = if total' < 0
+      then select b (toCompleteSolution tmp' (fmap snd stampSets))
+      else optimum' total' stampSets tmp' b
+      where
+        total' = total - p * (fromIntegral k)
+        tmp' = add tmp s k
+
+-- | Select the best solution.
+select :: Maybe Solution -> Solution -> Maybe Solution
+select Nothing y = Just y
+select (Just x) y = if (solutionCost x) < (solutionCost y)
+  then Just x
+  else Just y
+
+-- | Keep the current solution.
+keepCurrent :: Maybe Solution -> PartialSolution -> Bool
+keepCurrent Nothing _ = False
+keepCurrent (Just current) tmp = (solutionCost current) <= (currentCost tmp)
 
 -- | Associate the total value of all following sets to each stamp set of the
 -- sequence.
