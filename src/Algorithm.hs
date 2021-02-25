@@ -8,19 +8,15 @@ Solve the postage cost problem.
 
 module Algorithm (
   Solution,
-  boundary,
-  reprBoundary,
   optimum,
   reprSolution,
   solutionCost,
   resultingInventory,
-  almostEqualSol,
-  almostEqualBoundary
+  almostEqualSol
   ) where
 
 import Data.Foldable ( toList )
 import Data.List ( intercalate )
-import qualified Data.List as L
 import Data.Sequence ( Seq(..), (<|), (|>), (><) )
 import qualified Data.Sequence as S
 import Numeric ( showFFloat )
@@ -42,13 +38,6 @@ almostEqualSol (Complete t used left) (t', used', left') = cond1 && cond2 && con
     cond2 = almostEqualSeq used used'
     cond3 = almostEqualSeq left left'
 
--- | Test if two lists of solutions are equal (float precision: 1e-12). For
--- test purpose only.
-almostEqualBoundary :: [Solution] -> [(Double, Seq StampSet, Seq StampSet)] -> Bool
-almostEqualBoundary x y = if (length x) == (length y)
-  then foldr (&&) True (zipWith almostEqualSol x y)
-  else False
-
 -- | Add a stamp set to a partial solution.
 add :: PartialSolution -> StampSet -> Int -> PartialSolution
 add (Partial c used left) s n = Partial c' (used |> s1) (left |> s2)
@@ -59,41 +48,6 @@ add (Partial c used left) s n = Partial c' (used |> s1) (left |> s2)
 -- | Convert a partial solution to a complete solution.
 toCompleteSolution :: PartialSolution -> Seq StampSet -> Solution
 toCompleteSolution (Partial t used left) untouched = Complete t used (left >< untouched)
-
--- | Find the boundary of the set of admissible solutions.
-boundary :: Double -> Seq StampSet -> Either String [Solution]
-boundary total inventory = if total <= 0
-  then Left "The total cost should be a positive float!"
-  else if null sols
-    then Left "The problem is infeasible!"
-    else Right (L.sortBy go sols)
-  where
-    sols = boundary' total inventory' (Partial 0 Empty Empty)
-    go :: Solution -> Solution -> Ordering
-    go (Complete x _ _) (Complete y _ _) = compare x y
-    -- The fact that the sequence is sorted may speed up the algorithm in
-    -- some cases.
-    inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
-
--- | Recursively find the boundary of the set of admissible solutions.
-boundary' :: Double -> Seq StampSet -> PartialSolution -> [Solution]
-boundary' _ Empty _ = []
-boundary' total (s :<| stampSets) tmp = case stampSets of
-  Empty -> if n <= q
-    then [toCompleteSolution (add tmp s n) Empty]
-    else []
-  _ -> concat [ go i | i <- [0..(min q n)] ] -- FIXME: use something else than a list?
-  where
-    p = price s
-    q = quantity s
-    n = ceiling (total / p)
-    go :: Int -> [Solution]
-    go k = if total' < 0
-      then [toCompleteSolution tmp' stampSets]
-      else boundary' total' stampSets tmp'
-      where
-        total' = total - p * (fromIntegral k)
-        tmp' = add tmp s k
 
 -- | Find the optimal solution of the postage cost problem.
 optimum :: Double -> Seq StampSet -> Either String Solution
@@ -158,11 +112,6 @@ reprSolution (Complete total used _) = (fmtFloat total) $ " EUR (" ++ stamps ++ 
     stamps = intercalate ", " (toList (fmap go used))
     go :: StampSet -> String
     go s = (show (quantity s)) ++ "x at " ++ (fmtFloat (price s) $ " EUR")
-
--- | Turn a list of solutions into a human readable string. The resulting string
--- is not exhaustive and should not be used for serialisation.
-reprBoundary :: [Solution] -> String
-reprBoundary xs = intercalate "\n" (fmap reprSolution xs)
 
 -- | Get the cost of a partial solution.
 currentCost :: PartialSolution -> Double

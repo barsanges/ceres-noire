@@ -13,10 +13,6 @@ an *admissible solution* to the problem is a vector ![x](https://render.githubus
 where ![C](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+C)
 is the cost of a letter.
 
-The *boundary of the set of admissible solutions* is defined as:
+An *optimal solution* (if any) is ![x](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+x) such that, for all other admissible solution ![y](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+y):
 
-![\mathcal{B} = \{ x / \sum_i c_i x_i \geq C \: \text{and} \: \forall i, x_i \leq {\bar x}_i \: \text{and} \:  \forall i, c_i (x_i - 1) + \sum_{j \neq i} c_j x_j < C \}.](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+%5Cmathcal%7BB%7D+%3D+%5C%7B+x+%2F+%5Csum_i+c_i+x_i+%5Cgeq+C+%5C%3A+%5Ctext%7Band%7D+%5C%3A+%5Cforall+i%2C+x_i+%5Cleq+%7B%5Cbar+x%7D_i+%5C%3A+%5Ctext%7Band%7D+%5C%3A++%5Cforall+i%2C+c_i+%28x_i+-+1%29+%2B+%5Csum_%7Bj+%5Cneq+i%7D+c_j+x_j+%3C+C+%5C%7D.)
-
-An *optimal solution* (if any) is:
-
-![\min ( \mathcal{B} ).](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+%5Cmin+%28+%5Cmathcal%7BB%7D+%29.)
+![\sum_i c_i x_i \leq \sum_i c_i y_i](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Csum_i+c_i+x_i+%5Cleq+%5Csum_i+c_i+y_i)

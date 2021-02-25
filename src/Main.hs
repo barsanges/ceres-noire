@@ -13,7 +13,7 @@ import StampSet
 import Algorithm
 
 -- | How the results of the algorithm should be used?
-data Usage = Ask | DryRun | Yes | Boundary
+data Usage = Ask | DryRun | Yes
   deriving Eq
 
 -- | Command line arguments.
@@ -43,13 +43,7 @@ argsParser = Args
             <> short 'y'
             <> help "If this option is used, the program does not\
                     \ ask for confirmation before updating the\
-                    \ inventory file" ))
-      <|> ( flag' Boundary
-            ( long "boundary"
-            <> short 'b'
-            <> help "If this option is used, the program returns\
-                    \ the boundary of the set of admissible\
-                    \ solutions rather than an optimal solution" )))
+                    \ inventory file" )))
 
 -- | Command line parser for 'ceres-noire'.
 args :: ParserInfo Args
@@ -66,18 +60,14 @@ main = do
   maybeInventory <- readInventory (fin cli)
   case maybeInventory of
     Left err -> putStrLn err
-    Right inventory -> if usage cli == Boundary
-      then case (boundary (totalCost cli) inventory) of
-        Left msg -> putStrLn msg
-        Right res -> (putStrLn . reprBoundary) res
-      else case optimum (totalCost cli) inventory of
-        Left msg -> putStrLn msg
-        Right opt -> do
-          (putStrLn . reprSolution) opt
-          case (usage cli) of
-            Ask -> confirm "Do you want to update the inventory (Y/n)?" (update opt)
-            Yes -> (update opt)
-            _ -> return ()
+    Right inventory -> case optimum (totalCost cli) inventory of
+      Left msg -> putStrLn msg
+      Right opt -> do
+        (putStrLn . reprSolution) opt
+        case (usage cli) of
+          Ask -> confirm "Do you want to update the inventory (Y/n)?" (update opt)
+          Yes -> (update opt)
+          _ -> return ()
       where
         update x = writeInventory (fin cli) (resultingInventory x)
 

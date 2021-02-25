@@ -61,26 +61,6 @@ sol1 = (1.10,
                   fromJust (mkStampSet 1.05 2),
                   fromJust (mkStampSet 0.05 3)])
 
-boundary1 :: [PseudoSol]
-boundary1 = [(1.10,
-              fromList [fromJust (mkStampSet 1.82 0),
-                        fromJust (mkStampSet 1.05 1),
-                        fromJust (mkStampSet 0.05 1)],
-              fromList [fromJust (mkStampSet 1.82 1),
-                        fromJust (mkStampSet 1.05 2),
-                        fromJust (mkStampSet 0.05 3)]),
-             (1.82,
-              fromList [fromJust (mkStampSet 1.82 1)],
-              fromList [fromJust (mkStampSet 1.82 0),
-                        fromJust (mkStampSet 1.05 3),
-                        fromJust (mkStampSet 0.05 4)]),
-             (2.1,
-              fromList [fromJust (mkStampSet 1.82 0),
-                        fromJust (mkStampSet 1.05 2)],
-              fromList [fromJust (mkStampSet 1.82 1),
-                        fromJust (mkStampSet 1.05 1),
-                        fromJust (mkStampSet 0.05 4)])]
-
 propTotalCost :: Double -> Seq StampSet -> Bool
 propTotalCost x inventory = case optimum x' inventory of
   Left _ -> True -- FIXME: find a way to dismiss these results.
@@ -99,22 +79,6 @@ propResultingInventory x inventory = case optimum x' inventory of
 
 spec :: Spec
 spec = do
-  describe "boundary" $ do
-    it "find the boundary of the set of admissible solutions for the postage cost problem" $
-      ((boundary 1.06 sq1) `eitherEquals` (Right boundary1)) `shouldBe` True
-
-    it "should fail if the cost of the letter is bigger than the total value of the inventory" $
-      ((boundary 6 sq1) `eitherEquals` (Left "The problem is infeasible!")) `shouldBe` True
-
-    it "should fail if the cost is zero" $
-      ((boundary 0 sq1) `eitherEquals` (Left "The total cost should be a positive float!")) `shouldBe` True
-{-
-    it "should always fail if the inventory is empty" $ property $
-      \ x -> ((boundary (0.001 + abs x) Empty) `eitherEquals` (Left "The problem is infeasible!"))
-
-    it "should always fail if the total cost < 0" $ property $
-      \ x -> ((boundary (-(abs x)) Empty) `eitherEquals` (Left "The total cost should be a positive float!"))
--}
   describe "optimum" $ do
     it "choose the least costly combination of stamps for a letter" $
       ((optimum 1.06 sq1) `eitherEqual` (Right sol1)) `shouldBe` True
