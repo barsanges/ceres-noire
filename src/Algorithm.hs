@@ -109,7 +109,9 @@ reprSolution :: Solution -> String
 reprSolution (Complete total used _) = (fmtFloat total) $ " EUR (" ++ stamps ++ ")"
   where
     fmtFloat = showFFloat (Just 2)
-    stamps = intercalate ", " (toList (fmap go used))
+    stamps = intercalate ", " (toList (fmap go (S.filter f used)))
+    f :: StampSet -> Bool
+    f s = (quantity s) > 0
     go :: StampSet -> String
     go s = (show (quantity s)) ++ "x at " ++ (fmtFloat (price s) $ " EUR")
 
