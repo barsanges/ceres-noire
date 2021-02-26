@@ -11,6 +11,7 @@ module AlgorithmSpec ( spec ) where
 import Test.Hspec
 import Test.QuickCheck
 
+import Data.Either ( isRight )
 import Data.Maybe ( fromJust )
 import Data.Sequence ( Seq(..), fromList )
 
@@ -61,21 +62,32 @@ sol1 = (1.10,
                   fromJust (mkStampSet 1.05 2),
                   fromJust (mkStampSet 0.05 3)])
 
-propTotalCost :: Double -> Seq StampSet -> Bool
-propTotalCost x inventory = case optimum x' inventory of
-  Left _ -> True -- FIXME: find a way to dismiss these results.
-  Right sol -> solutionCost sol >= x'
-  where
-    x' = 0.01 + abs x
+probGen :: Int -> Gen (Double, Seq StampSet)
+probGen n = do
+  x <- arbitrary
+  y <- resize n (fmap fromList (listOf arbitrary))
+  return (x, y)
 
-propResultingInventory :: Double -> Seq StampSet -> Bool
-propResultingInventory x inventory = case optimum x' inventory of
-  Left _ -> True -- FIXME: find a way to dismiss these results.
-  Right sol -> foldr go True (resultingInventory sol)
+propTotalCost (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
   where
     x' = 0.01 + abs x
-    go :: StampSet -> Bool -> Bool
-    go s b = b && (quantity s >= 0)
+    res = optimum x' inventory
+    ok = isRight res
+    prop = case res of
+      Left _ -> True -- Never happens in practice.
+      Right sol -> solutionCost sol >= x'
+
+propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
+  where
+    x' = 0.01 + abs x
+    res = optimum x' inventory
+    ok = isRight res
+    prop = case res of
+      Left _ -> True -- Never happens in practice.
+      Right sol -> foldr go True (resultingInventory sol)
+      where
+        go :: StampSet -> Bool -> Bool
+        go s b = b && (quantity s >= 0)
 
 spec :: Spec
 spec = do
@@ -88,7 +100,6 @@ spec = do
 
     it "should fail if the cost is zero" $
       ((optimum 0 sq1) `eitherEqual` (Left "The total cost should be a positive float!")) `shouldBe` True
-{-
     it "should always fail if the inventory is empty" $ property $
       \ x -> ((optimum (0.001 + abs x) Empty) `eitherEqual` (Left "The problem is infeasible!"))
 
@@ -96,8 +107,7 @@ spec = do
       \ x -> ((optimum (-(abs x)) Empty) `eitherEqual` (Left "The total cost should be a positive float!"))
 
     it "should always give a solution (if it exists) with a cost greater or equal to the cost of the letter" $ property $
-      propTotalCost
+      forAll (probGen 5) propTotalCost
 
     it "should never return an inventory with a negative number of stamps" $ property $
-      propResultingInventory
--}
+      forAll (probGen 5) propResultingInventory
