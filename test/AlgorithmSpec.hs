@@ -100,6 +100,7 @@ spec = do
 
     it "should fail if the cost is zero" $
       ((optimum 0 sq1) `eitherEqual` (Left "The total cost should be a positive float!")) `shouldBe` True
+
     it "should always fail if the inventory is empty" $ property $
       \ x -> ((optimum (0.001 + abs x) Empty) `eitherEqual` (Left "The problem is infeasible!"))
 
