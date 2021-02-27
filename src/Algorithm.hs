@@ -57,10 +57,11 @@ optimum total inventory = if total <= 0
     Nothing -> Left "The problem is infeasible!"
     Just sol -> Right sol
   where
-    maybeSol = optimum' total (warmUp inventory') (Partial 0 Empty Empty) Nothing
+    maybeSol = optimum' total (warmUp inventory') (Partial 0 Empty Empty) startingSol
     -- The fact that the sequence is sorted may speed up the algorithm in
     -- some cases.
     inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
+    startingSol = initialize total inventory'
 
 -- | Recursively find an optimal solution.
 optimum' :: Double -> Seq (Double, StampSet) -> PartialSolution -> Maybe Solution -> Maybe Solution
@@ -102,6 +103,42 @@ warmUp sq = snd (foldr go (0, Empty) sq)
   where
     go :: StampSet -> (Double, Seq (Double, StampSet)) -> (Double, Seq (Double, StampSet))
     go x (t, s) = (t + setValue x, (t, x) <| s)
+
+-- | Find a simple solution (likely suboptimal, but hopefully not too much) to
+-- a given problem. It will be used as an upper bound for the optimization.
+initialize :: Double -> Seq StampSet -> Maybe Solution
+initialize total collection = case s1 of
+  Nothing -> Nothing -- The problem is infeasible.
+  Just sol -> select s2 sol
+  where
+    s1 = topToBottom total collection
+    s2 = bottomToTop total collection
+
+-- | Find a solution (if any) by choosing the most costly stamps first.
+topToBottom :: Double -> Seq StampSet -> Maybe Solution
+topToBottom total sq = go total sq (Partial 0 Empty Empty)
+  where
+    go :: Double -> Seq StampSet -> PartialSolution -> Maybe Solution
+    go t Empty tmp = if t <= 0
+      then Just (toCompleteSolution tmp Empty)
+      else Nothing
+    go t (s :<| stampSets) tmp
+      | t <= 0 = Just (toCompleteSolution tmp (s <| stampSets))
+      | t' <= 0 = Just (toCompleteSolution tmp1 stampSets)
+      | otherwise = go t' stampSets tmp2
+      where
+        t' = t - setValue s
+        n = ceiling (t / (price s))
+        tmp1 = add tmp s n
+        tmp2 = add tmp s (quantity s)
+
+-- | Find a solution (if any) by choosing the least costly stamps first.
+bottomToTop :: Double -> Seq StampSet -> Maybe Solution
+bottomToTop total sq = case msol of
+  Nothing -> Nothing
+  Just (Complete t used left) -> Just (Complete t (S.reverse used) (S.reverse left))
+  where
+    msol = topToBottom total (S.reverse sq)
 
 -- | Turn a solution into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation.
