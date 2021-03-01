@@ -55,8 +55,7 @@ eitherEquals (Right x) (Right y) = if (length x) == (length y)
 
 sol1 :: PseudoSol
 sol1 = (1.10,
-        fromList [fromJust (mkStampSet 1.82 0),
-                  fromJust (mkStampSet 1.05 1),
+        fromList [fromJust (mkStampSet 1.05 1),
                   fromJust (mkStampSet 0.05 1)],
         fromList [fromJust (mkStampSet 1.82 1),
                   fromJust (mkStampSet 1.05 2),

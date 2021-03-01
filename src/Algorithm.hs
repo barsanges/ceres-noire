@@ -40,10 +40,14 @@ almostEqualSol (Complete t used left) (t', used', left') = cond1 && cond2 && con
 
 -- | Add a stamp set to a partial solution.
 add :: PartialSolution -> StampSet -> Int -> PartialSolution
-add (Partial c used left) s n = Partial c' (used |> s1) (left |> s2)
+add (Partial c used left) s n = Partial c' used' left'
   where
     c' = c + (price s) * (fromIntegral n)
     (s1, s2) = split s n
+    used' = if quantity s1 > 0
+      then used |> s1
+      else used
+    left' = left |> s2
 
 -- | Convert a partial solution to a complete solution.
 toCompleteSolution :: PartialSolution -> Seq StampSet -> Solution
