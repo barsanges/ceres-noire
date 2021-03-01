@@ -96,14 +96,17 @@ optimum' total ((v, s) :<| stampSets) tmp best
 -- | Select the best solution.
 select :: Maybe Solution -> Solution -> Maybe Solution
 select Nothing y = Just y
-select (Just x) y = if (solutionCost x) < (solutionCost y)
-  then Just x
-  else Just y
+select (Just x) y
+  | abs (solutionCost x - solutionCost y) < 1e-12 = if (solutionNStamps x) <= (solutionNStamps y)
+    then Just x
+    else Just y
+  | (solutionCost x) < (solutionCost y) = Just x
+  | otherwise = Just y
 
 -- | Keep the current solution.
 keepCurrent :: Maybe Solution -> PartialSolution -> Bool
 keepCurrent Nothing _ = False
-keepCurrent (Just current) tmp = (solutionCost current) <= (currentCost tmp)
+keepCurrent (Just current) tmp = (solutionCost current) < (currentCost tmp)
 
 -- | Associate the total value of all following sets to each stamp set of the
 -- sequence.
@@ -164,6 +167,10 @@ reprSolution (Complete _ total used _) = (fmtFloat total) $ " EUR (" ++ stamps +
 -- | Get the cost of a partial solution.
 currentCost :: PartialSolution -> Double
 currentCost (Partial _ c _ _) = c
+
+-- | Get the total cost of a solution.
+solutionNStamps :: Solution -> Int
+solutionNStamps (Complete n _ _ _) = n
 
 -- | Get the total cost of a solution.
 solutionCost :: Solution -> Double

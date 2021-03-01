@@ -36,6 +36,11 @@ s3 = fromJust (mkStampSet 0.05 4)
 sq1 :: Seq StampSet
 sq1 = fromList [s1, s2, s3]
 
+sq2 :: Seq StampSet
+sq2 = fromList [fromJust (mkStampSet 3 5),
+                fromJust (mkStampSet 1 5),
+                fromJust (mkStampSet 0.5 10)]
+
 type PseudoSol = (Double, Seq StampSet, Seq StampSet)
 
 -- FIXME: share some code between the two test modules.
@@ -60,6 +65,21 @@ sol1 = (1.10,
         fromList [fromJust (mkStampSet 1.82 1),
                   fromJust (mkStampSet 1.05 2),
                   fromJust (mkStampSet 0.05 3)])
+
+sol2 :: PseudoSol
+sol2 = (3.5,
+        fromList [fromJust (mkStampSet 3 1),
+                  fromJust (mkStampSet 0.5 1)],
+        fromList [fromJust (mkStampSet 3 4),
+                  fromJust (mkStampSet 1 5),
+                  fromJust (mkStampSet 0.5 9)])
+
+sol3 :: PseudoSol
+sol3 = (2,
+        fromList [fromJust (mkStampSet 1 2)],
+        fromList [fromJust (mkStampSet 3 5),
+                  fromJust (mkStampSet 1 3),
+                  fromJust (mkStampSet 0.5 10)])
 
 probGen :: Int -> Gen (Double, Seq StampSet)
 probGen n = do
@@ -93,6 +113,12 @@ spec = do
   describe "optimum" $ do
     it "choose the least costly combination of stamps for a letter" $
       ((optimum 1.06 sq1) `eitherEqual` (Right sol1)) `shouldBe` True
+
+    it "choose the optimal combination with the least number of stamps (1)" $
+      ((optimum 3.5 sq2) `eitherEqual` (Right sol2)) `shouldBe` True
+
+    it "choose the optimal combination with the least number of stamps (2)" $
+      ((optimum 2 sq2) `eitherEqual` (Right sol3)) `shouldBe` True
 
     it "should fail if the cost of the letter is bigger than the total value of the inventory" $
       ((optimum 6 sq1) `eitherEqual` (Left "The problem is infeasible!")) `shouldBe` True
