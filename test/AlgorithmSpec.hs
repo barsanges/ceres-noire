@@ -93,7 +93,7 @@ propTotalCost (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
     res = optimum x' inventory
     ok = isRight res
     prop = case res of
-      Left _ -> True -- Never happens in practice.
+      Left _ -> False -- Never happens in practice.
       Right sol -> solutionCost sol >= x'
 
 propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
@@ -102,7 +102,7 @@ propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
     res = optimum x' inventory
     ok = isRight res
     prop = case res of
-      Left _ -> True -- Never happens in practice.
+      Left _ -> False -- Never happens in practice.
       Right sol -> foldr go True (resultingInventory sol)
       where
         go :: StampSet -> Bool -> Bool
