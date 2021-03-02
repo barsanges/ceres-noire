@@ -87,7 +87,7 @@ probGen n = do
   y <- resize n (fmap fromList (listOf arbitrary))
   return (x, y)
 
-propTotalCost (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
+propTotalCost (x, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
     x' = 0.01 + abs x
     res = optimum x' inventory
@@ -96,7 +96,7 @@ propTotalCost (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
       Left _ -> False -- Never happens in practice.
       Right sol -> solutionCost sol >= x'
 
-propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" $ prop
+propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
     x' = 0.01 + abs x
     res = optimum x' inventory
