@@ -23,28 +23,28 @@ import Numeric ( showFFloat )
 import StampSet
 
 -- | A partial solution of a postage cost problem.
-data PartialSolution = Partial Int Double (Seq StampSet) (Seq StampSet)
+data PartialSolution = Partial Double Int Double (Seq StampSet) (Seq StampSet)
 
 -- | A solution of a postage cost problem.
-data Solution = Complete Int Double (Seq StampSet) (Seq StampSet)
+data Solution = Complete Double Int Double (Seq StampSet) (Seq StampSet)
   deriving Show
 
 -- | Test if two solutions are equal (float precision: 1e-12). For test purpose
 -- only.
 almostEqualSol :: Solution -> (Double, Seq StampSet, Seq StampSet) -> Bool
-almostEqualSol (Complete _ t used left) (t', used', left') = cond1 && cond2 && cond3
+almostEqualSol (Complete _ _ t used left) (t', used', left') = cond1 && cond2 && cond3
   where
     cond1 = (abs (t - t') < 1e-12)
     cond2 = almostEqualSeq used used'
     cond3 = almostEqualSeq left left'
 
 -- | An empty (partial) solution.
-emptySolution :: PartialSolution
-emptySolution = Partial 0 0 Empty Empty
+emptySolution :: Double -> PartialSolution
+emptySolution cost = Partial cost 0 0 Empty Empty
 
 -- | Add a stamp set to a partial solution.
 add :: PartialSolution -> StampSet -> Int -> PartialSolution
-add (Partial n c used left) s k = Partial n' c' used' left'
+add (Partial x n c used left) s k = Partial x n' c' used' left'
   where
     c' = c + (price s) * (fromIntegral k)
     (s1, s2) = split s k
@@ -56,7 +56,7 @@ add (Partial n c used left) s k = Partial n' c' used' left'
 
 -- | Convert a partial solution to a complete solution.
 toCompleteSolution :: PartialSolution -> Seq StampSet -> Solution
-toCompleteSolution (Partial n t used left) untouched = Complete n t used (left >< untouched)
+toCompleteSolution (Partial x n t used left) untouched = Complete x n t used (left >< untouched)
 
 -- | Find the optimal solution of the postage cost problem.
 optimum :: Double -> Seq StampSet -> Either String Solution
@@ -66,7 +66,7 @@ optimum total inventory = if total <= 0
     Nothing -> Left "The problem is infeasible!"
     Just sol -> Right sol
   where
-    maybeSol = optimum' total (warmUp inventory') emptySolution startingSol
+    maybeSol = optimum' total (warmUp inventory') (emptySolution total) startingSol
     -- The fact that the sequence is sorted may speed up the algorithm in
     -- some cases.
     inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
@@ -128,7 +128,7 @@ initialize total collection = case s1 of
 
 -- | Find a solution (if any) by choosing the most costly stamps first.
 topToBottom :: Double -> Seq StampSet -> Maybe Solution
-topToBottom total sq = go total sq emptySolution
+topToBottom total sq = go total sq (emptySolution total)
   where
     go :: Double -> Seq StampSet -> PartialSolution -> Maybe Solution
     go t Empty tmp = if t <= 0
@@ -148,14 +148,14 @@ topToBottom total sq = go total sq emptySolution
 bottomToTop :: Double -> Seq StampSet -> Maybe Solution
 bottomToTop total sq = case msol of
   Nothing -> Nothing
-  Just (Complete n t used left) -> Just (Complete n t (S.reverse used) (S.reverse left))
+  Just (Complete c n t used left) -> Just (Complete c n t (S.reverse used) (S.reverse left))
   where
     msol = topToBottom total (S.reverse sq)
 
 -- | Turn a solution into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation.
 reprSolution :: Solution -> String
-reprSolution (Complete _ total used _) = (fmtFloat total) $ " EUR (" ++ stamps ++ ")"
+reprSolution (Complete _ _ total used _) = (fmtFloat total) $ " EUR (" ++ stamps ++ ")"
   where
     fmtFloat = showFFloat (Just 2)
     stamps = intercalate ", " (toList (fmap go (S.filter f used)))
@@ -166,16 +166,16 @@ reprSolution (Complete _ total used _) = (fmtFloat total) $ " EUR (" ++ stamps +
 
 -- | Get the cost of a partial solution.
 currentCost :: PartialSolution -> Double
-currentCost (Partial _ c _ _) = c
+currentCost (Partial _ _ c _ _) = c
 
--- | Get the total cost of a solution.
+-- | Get the total number of stamps in a solution.
 solutionNStamps :: Solution -> Int
-solutionNStamps (Complete n _ _ _) = n
+solutionNStamps (Complete _ n _ _ _) = n
 
 -- | Get the total cost of a solution.
 solutionCost :: Solution -> Double
-solutionCost (Complete _ t _ _) = t
+solutionCost (Complete _ _ t _ _) = t
 
 -- | Get the sets of stamps left after solving a problem.
 resultingInventory :: Solution -> Seq StampSet
-resultingInventory (Complete _ _ _ left) = left
+resultingInventory (Complete _ _ _ _ left) = left
