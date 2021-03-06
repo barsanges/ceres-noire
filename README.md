@@ -16,3 +16,5 @@ is the cost of a letter.
 An *optimal solution* (if any) is ![x](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+x) such that, for all other admissible solution ![y](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+y):
 
 ![\sum_i c_i x_i \leq \sum_i c_i y_i](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Csum_i+c_i+x_i+%5Cleq+%5Csum_i+c_i+y_i)
+
+*Variants* are suboptimal solutions based on the optimal one: for each type of stamp used in the optimal solution, a variant is searched based on the optimal solution minus one of these stamps.
