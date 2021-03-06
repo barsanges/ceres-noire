@@ -17,7 +17,7 @@ data Usage = Ask | DryRun | Yes | Variants
   deriving Eq
 
 -- | Command line arguments.
-data Args = Args { totalCost :: Double, fin :: String, usage :: Usage }
+data Args = Args { totalCost :: Double, fin :: String, usage :: Usage, comma :: Bool }
 
 argsParser :: Parser Args
 argsParser = Args
@@ -49,6 +49,10 @@ argsParser = Args
             <> help "If this option is used, the program returns\
                     \ both the optimal solutions and several\
                     \ (if possible) suboptimal ones" )))
+  <*> ( switch
+        ( long "comma"
+        <> short 'c'
+        <> help "use commas instead of semi-colons as CSV separator" ))
 
 -- | Command line parser for 'ceres-noire'.
 args :: ParserInfo Args
@@ -62,7 +66,7 @@ args = info (argsParser <**> helper)
 main :: IO ()
 main = do
   cli <- execParser args
-  maybeInventory <- readInventory (fin cli)
+  maybeInventory <- readInventory (comma cli) (fin cli)
   case maybeInventory of
     Left err -> putStrLn err
     Right inventory -> case optimum (totalCost cli) inventory of
@@ -77,7 +81,7 @@ main = do
             (putStrLn . reprVariants) (variants opt)
           DryRun -> return ()
       where
-        update x = writeInventory (fin cli) (resultingInventory x)
+        update x = writeInventory (comma cli) (fin cli) (resultingInventory x)
 
 -- | Ask for confirmation before performing an action.
 confirm :: String -> IO () -> IO ()

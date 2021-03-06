@@ -27,6 +27,7 @@ module StampSet (
   ) where
 
 import qualified Data.ByteString.Lazy as BL
+import Data.Char ( ord )
 import qualified Data.Csv as Csv
 import Data.Foldable ( toList )
 import Data.Sequence ( Seq(..), (<|), fromList )
@@ -109,23 +110,30 @@ almostEqualSeq x y = if (length x) == (length y)
   else False
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
-fromByteString :: BL.ByteString -> Either String (Seq StampSet)
-fromByteString bs = case Csv.decodeByName bs of
+fromByteString :: Bool -> BL.ByteString -> Either String (Seq StampSet)
+fromByteString comma bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
   Right (_, x) -> Right ((fromList . V.toList) x)
+  where
+    myOptions = if comma
+      then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }
+      else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
 -- | Read a sequence of stamp sets from a CSV file.
-readInventory :: String -> IO (Either String (Seq StampSet))
-readInventory fname = do
+readInventory :: Bool -> String -> IO (Either String (Seq StampSet))
+readInventory comma fname = do
   csvData <- BL.readFile fname
-  return (fromByteString csvData)
+  return (fromByteString comma csvData)
 
 -- | Turn a sequence of stamp sets to a CSV-like bytestring.
-toByteString :: (Seq StampSet) -> BL.ByteString
-toByteString stamps = Csv.encodeByName header (toList stamps)
+toByteString :: Bool -> (Seq StampSet) -> BL.ByteString
+toByteString comma stamps = Csv.encodeByNameWith myOptions header (toList stamps)
   where
     header = V.fromList ["price", "quantity"]
+    myOptions = if comma
+      then Csv.defaultEncodeOptions { Csv.encDelimiter = fromIntegral (ord ',') }
+      else Csv.defaultEncodeOptions { Csv.encDelimiter = fromIntegral (ord ';') }
 
 -- | Read a sequence of stamp sets to a CSV file.
-writeInventory :: String -> (Seq StampSet) -> IO ()
-writeInventory fname stamps = BL.writeFile fname (toByteString stamps)
+writeInventory :: Bool -> String -> (Seq StampSet) -> IO ()
+writeInventory comma fname stamps = BL.writeFile fname (toByteString comma stamps)
