@@ -58,6 +58,11 @@ eitherEquals (Right x) (Right y) = if (length x) == (length y)
   then foldr (&&) True (zipWith almostEqualSol x y)
   else False
 
+runVariants :: Double -> Seq StampSet -> Either String [Solution]
+runVariants cost inventory = do
+  opt <- optimum cost inventory
+  return (variants opt)
+
 sol1 :: PseudoSol
 sol1 = (1.10,
         fromList [fromJust (mkStampSet 1.05 1),
@@ -80,6 +85,30 @@ sol3 = (2,
         fromList [fromJust (mkStampSet 3 5),
                   fromJust (mkStampSet 1 3),
                   fromJust (mkStampSet 0.5 10)])
+
+var1 :: PseudoSol
+var1 = (3.5,
+        fromList [fromJust (mkStampSet 1 3),
+                  fromJust (mkStampSet 0.5 1)],
+        fromList [fromJust (mkStampSet 3 5),
+                  fromJust (mkStampSet 1 2),
+                  fromJust (mkStampSet 0.5 9)])
+
+var2 :: PseudoSol
+var2 = (4,
+        fromList [fromJust (mkStampSet 3 1),
+                  fromJust (mkStampSet 1 1)],
+        fromList [fromJust (mkStampSet 3 4),
+                  fromJust (mkStampSet 1 4),
+                  fromJust (mkStampSet 0.5 10)])
+
+var3 :: PseudoSol
+var3 = (2,
+        fromList [fromJust (mkStampSet 1 1),
+                  fromJust (mkStampSet 0.5 2)],
+        fromList [fromJust (mkStampSet 3 5),
+                  fromJust (mkStampSet 1 4),
+                  fromJust (mkStampSet 0.5 8)])
 
 probGen :: Int -> Gen (Double, Seq StampSet)
 probGen n = do
@@ -107,6 +136,18 @@ propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" prop
       where
         go :: StampSet -> Bool -> Bool
         go s b = b && (quantity s >= 0)
+
+propWorse (x, inventory) = ok ==> prop
+  where
+    x' = 0.01 + abs x
+    sol = optimum x' inventory
+    ok = isRight sol
+    prop = case sol of
+      Left _ -> False -- Never happens in practice.
+      Right opt -> foldr go True (variants opt)
+        where
+          go :: Solution -> Bool -> Bool
+          go s b = b && (solutionCost s >= solutionCost opt)
 
 spec :: Spec
 spec = do
@@ -137,3 +178,16 @@ spec = do
 
     it "should never return an inventory with a negative number of stamps" $ property $
       forAll (probGen 5) propResultingInventory
+
+  describe "variants" $ do
+    it "find suboptimal solutions close (in terms of stamps) to the optimal one (1)" $
+      ((runVariants 3.5 sq2) `eitherEquals` (Right [var1, var2])) `shouldBe` True
+
+    it "may fail to find other solutions" $
+      ((runVariants 2 sq2) `eitherEquals` (Right [var3])) `shouldBe` True
+
+    it "may fail to find other solutions" $
+      ((runVariants 24.1 sq2) `eitherEquals` (Right [])) `shouldBe` True
+
+    it "should never find solutions better than the optimum" $ property $
+      forAll (probGen 5) propWorse
