@@ -14,7 +14,10 @@ module StampSet (
   price,
   quantity,
   setValue,
+  totalValue,
+  totalQuantity,
   split,
+  simplify,
   almostEqual,
   almostEqualSeq,
   fromByteString,
@@ -26,7 +29,7 @@ module StampSet (
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
 import Data.Foldable ( toList )
-import Data.Sequence ( Seq, fromList )
+import Data.Sequence ( Seq(..), (<|), fromList )
 import qualified Data.Sequence as S
 import qualified Data.Vector as V
 
@@ -67,6 +70,14 @@ quantity (StampSet _ q) = q
 setValue :: StampSet -> Double
 setValue (StampSet p q) = p * (fromIntegral q)
 
+-- | Get the total value of a sequence of stamps sets.
+totalValue :: Seq StampSet -> Double
+totalValue = foldr (\ s x -> x + setValue s) 0
+
+-- | Get the total number of stamps in a sequence of stamps sets.
+totalQuantity :: Seq StampSet -> Int
+totalQuantity = foldr (\ s x -> x + quantity s) 0
+
 -- | Split a set of stamps in two different parts, one with 'n' pieces and the
 -- other with the rest. If the operation is not feasible ('n < 0' or 'n' is
 -- larger than the number of stamps available), the first set of the pair is
@@ -75,6 +86,17 @@ split :: StampSet -> Int -> (StampSet, StampSet)
 split (StampSet p q) n = if (n <= q) && (n >= 0)
   then (StampSet p n, StampSet p (q - n))
   else (StampSet p 0, StampSet p q)
+
+-- | Simplify a sequence of stamps sets by merging the sets of stamps which
+-- have the same price.
+simplify :: Seq StampSet -> Seq StampSet
+simplify Empty = Empty
+simplify ((StampSet p q) :<| xs) = if q' > 0
+  then (StampSet p q') <| (simplify xs')
+  else simplify xs'
+  where
+    (ys, xs') = S.partition (\ y -> abs (price y - p) < 1e-12) xs
+    q' = q + totalQuantity ys
 
 -- | Test if two stamp sets are equal (float precision: 1e-12).
 almostEqual :: StampSet -> StampSet -> Bool
