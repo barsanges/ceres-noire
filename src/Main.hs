@@ -13,7 +13,7 @@ import StampSet
 import Algorithm
 
 -- | How the results of the algorithm should be used?
-data Usage = Ask | DryRun | Yes
+data Usage = Ask | DryRun | Yes | Variants
   deriving Eq
 
 -- | Command line arguments.
@@ -43,7 +43,12 @@ argsParser = Args
             <> short 'y'
             <> help "If this option is used, the program does not\
                     \ ask for confirmation before updating the\
-                    \ inventory file" )))
+                    \ inventory file" ))
+      <|> ( flag' Variants
+            ( long "variants"
+            <> help "If this option is used, the program returns\
+                    \ both the optimal solutions and several\
+                    \ (if possible) suboptimal ones" )))
 
 -- | Command line parser for 'ceres-noire'.
 args :: ParserInfo Args
@@ -67,7 +72,10 @@ main = do
         case (usage cli) of
           Ask -> confirm "Do you want to update the inventory (Y/n)?" (update opt)
           Yes -> (update opt)
-          _ -> return ()
+          Variants -> do
+            putStrLn "Variants:"
+            (putStrLn . reprVariants) (variants opt)
+          DryRun -> return ()
       where
         update x = writeInventory (fin cli) (resultingInventory x)
 

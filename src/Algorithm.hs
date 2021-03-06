@@ -11,6 +11,7 @@ module Algorithm (
   optimum,
   variants,
   reprSolution,
+  reprVariants,
   solutionCost,
   resultingInventory,
   almostEqualSol
@@ -191,6 +192,13 @@ reprSolution (Complete _ _ total used _) = (fmtFloat total) $ " EUR (" ++ stamps
     f s = (quantity s) > 0
     go :: StampSet -> String
     go s = (show (quantity s)) ++ "x at " ++ (fmtFloat (price s) $ " EUR")
+
+-- | Turn a list of variants into a human readable string. See also
+-- 'reprSolution.'
+reprVariants :: [Solution] -> String
+reprVariants sols = if null sols
+  then "No variant found!"
+  else intercalate "\n" (fmap reprSolution sols)
 
 -- | Get the cost of a partial solution.
 currentCost :: PartialSolution -> Double
