@@ -9,6 +9,7 @@ Solve the postage cost problem.
 module Algorithm (
   Solution,
   optimum,
+  variants,
   reprSolution,
   solutionCost,
   resultingInventory,
@@ -17,6 +18,7 @@ module Algorithm (
 
 import Data.Foldable ( toList )
 import Data.List ( intercalate )
+import Data.Maybe ( catMaybes )
 import Data.Sequence ( Seq(..), (<|), (|>), (><) )
 import qualified Data.Sequence as S
 import Numeric ( showFFloat )
@@ -69,7 +71,7 @@ optimum total inventory = if total <= 0
     maybeSol = optimum' total (warmUp inventory') (emptySolution total) startingSol
     -- The fact that the sequence is sorted may speed up the algorithm in
     -- some cases.
-    inventory' = S.sortBy (\ x y -> compare (-(price x)) (-(price y))) inventory
+    inventory' = reorder inventory
     startingSol = initialize total inventory'
 
 -- | Recursively find an optimal solution.
@@ -151,6 +153,32 @@ bottomToTop total sq = case msol of
   Just (Complete c n t used left) -> Just (Complete c n t (S.reverse used) (S.reverse left))
   where
     msol = topToBottom total (S.reverse sq)
+
+-- | Find suboptimal solutions close (in terms of stamps) to the given one.
+variants :: Solution -> [Solution]
+variants (Complete cost _ _ used left) = catMaybes (fmap go (popEach Empty used))
+  where
+    toSolution :: Seq StampSet -> Seq StampSet -> Solution
+    toSolution u l = Complete cost (totalQuantity u) (totalValue u) (reorder u) (reorder l)
+
+    popEach :: Seq StampSet -> Seq StampSet -> [(StampSet, Seq StampSet)]
+    popEach _ Empty = []
+    popEach xs (y :<| ys) = (y, xs >< ys):(popEach (xs |> y) ys)
+
+    go :: (StampSet, Seq StampSet) -> Maybe Solution
+    go (x, xs) = case optimum (cost - (totalValue xs')) left' of
+      Left _ -> Nothing
+      Right (Complete _ _ _ u l) -> let u' = simplify (xs' >< u)
+                                        l' = simplify (x1 <| xlike >< l)
+                                    in Just (toSolution u' l')
+      where
+        (x1, x2) = split x 1
+        xs' = x2 <| xs
+        (xlike, left') = S.partition (\ a -> abs (price a - price x) < 1e-12) left
+
+-- | Reorder a sequence of stamps sets by decreasing prices.
+reorder :: Seq StampSet -> Seq StampSet
+reorder = S.sortOn (\ x -> -(price x))
 
 -- | Turn a solution into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation.
