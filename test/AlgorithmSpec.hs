@@ -183,7 +183,7 @@ spec = do
     it "find suboptimal solutions close (in terms of stamps) to the optimal one (1)" $
       ((runVariants 3.5 sq2) `eitherEquals` (Right [var1, var2])) `shouldBe` True
 
-    it "may fail to find other solutions" $
+    it "find suboptimal solutions close (in terms of stamps) to the optimal one (2)" $
       ((runVariants 2 sq2) `eitherEquals` (Right [var3])) `shouldBe` True
 
     it "may fail to find other solutions" $
