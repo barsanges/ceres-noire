@@ -17,6 +17,7 @@ dependencies:
 - cassava
 - containers
 - optparse-applicative
+- text
 - vector
 
 library:

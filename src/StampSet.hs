@@ -21,9 +21,10 @@ module StampSet (
   almostEqual,
   almostEqualSeq,
   fromByteString,
-  readInventory,
+  readInventoryFile,
+  readInventoryString,
   toByteString,
-  writeInventory
+  writeInventoryFile
   ) where
 
 import qualified Data.ByteString.Lazy as BL
@@ -32,6 +33,8 @@ import qualified Data.Csv as Csv
 import Data.Foldable ( toList )
 import Data.Sequence ( Seq(..), (<|), fromList )
 import qualified Data.Sequence as S
+import qualified Data.Text.Lazy as T
+import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
 
 -- | A set of similar stamps is defined by the unitary price of the price, and
@@ -120,10 +123,14 @@ fromByteString comma bs = case Csv.decodeByNameWith myOptions bs of
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
 -- | Read a sequence of stamp sets from a CSV file.
-readInventory :: Bool -> String -> IO (Either String (Seq StampSet))
-readInventory comma fname = do
+readInventoryFile :: Bool -> String -> IO (Either String (Seq StampSet))
+readInventoryFile comma fname = do
   csvData <- BL.readFile fname
   return (fromByteString comma csvData)
+
+-- | Read a sequence of stamp sets from a CSV-like string.
+readInventoryString :: Bool -> String -> Either String (Seq StampSet)
+readInventoryString comma csvData = fromByteString comma (encodeUtf8 . T.pack $ csvData)
 
 -- | Turn a sequence of stamp sets to a CSV-like bytestring.
 toByteString :: Bool -> (Seq StampSet) -> BL.ByteString
@@ -135,5 +142,5 @@ toByteString comma stamps = Csv.encodeByNameWith myOptions header (toList stamps
       else Csv.defaultEncodeOptions { Csv.encDelimiter = fromIntegral (ord ';') }
 
 -- | Read a sequence of stamp sets to a CSV file.
-writeInventory :: Bool -> String -> (Seq StampSet) -> IO ()
-writeInventory comma fname stamps = BL.writeFile fname (toByteString comma stamps)
+writeInventoryFile :: Bool -> String -> (Seq StampSet) -> IO ()
+writeInventoryFile comma fname stamps = BL.writeFile fname (toByteString comma stamps)

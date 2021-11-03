@@ -66,7 +66,7 @@ args = info (argsParser <**> helper)
 main :: IO ()
 main = do
   cli <- execParser args
-  maybeInventory <- readInventory (comma cli) (fin cli)
+  maybeInventory <- readInventoryFile (comma cli) (fin cli)
   case maybeInventory of
     Left err -> putStrLn err
     Right inventory -> case optimum (totalCost cli) inventory of
@@ -81,7 +81,7 @@ main = do
             (putStrLn . reprVariants) (variants opt)
           DryRun -> return ()
       where
-        update x = writeInventory (comma cli) (fin cli) (resultingInventory x)
+        update x = writeInventoryFile (comma cli) (fin cli) (resultingInventory x)
 
 -- | Ask for confirmation before performing an action.
 confirm :: String -> IO () -> IO ()
