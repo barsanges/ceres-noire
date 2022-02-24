@@ -109,7 +109,10 @@ select (Just x) y
 -- | Keep the current solution.
 keepCurrent :: Maybe Solution -> PartialSolution -> Bool
 keepCurrent Nothing _ = False
-keepCurrent (Just current) tmp = (solutionCost current) < (currentCost tmp)
+keepCurrent (Just current) tmp = costCheck && nStampsCheck
+  where
+    costCheck = (solutionCost current) < (currentCost tmp)
+    nStampsCheck = (solutionNStamps current) < (currentNStamps tmp)
 
 -- | Associate the total value of all following sets to each stamp set of the
 -- sequence.
@@ -203,6 +206,10 @@ reprVariants sols = if null sols
 -- | Get the cost of a partial solution.
 currentCost :: PartialSolution -> Double
 currentCost (Partial _ _ c _ _) = c
+
+-- | Get the total number of stamps in a partial solution.
+currentNStamps :: PartialSolution -> Int
+currentNStamps (Partial _ n _ _ _) = n
 
 -- | Get the total number of stamps in a solution.
 solutionNStamps :: Solution -> Int
