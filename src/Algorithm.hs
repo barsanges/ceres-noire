@@ -109,10 +109,10 @@ select (Just x) y
 -- | Keep the current solution.
 keepCurrent :: Maybe Solution -> PartialSolution -> Bool
 keepCurrent Nothing _ = False
-keepCurrent (Just current) tmp = costCheck && nStampsCheck
-  where
-    costCheck = (solutionCost current) < (currentCost tmp)
-    nStampsCheck = (solutionNStamps current) < (currentNStamps tmp)
+keepCurrent (Just current) tmp =
+  if abs (solutionCost current - currentCost tmp) < 1e-12
+  then (solutionNStamps current) < (currentNStamps tmp)
+  else (solutionCost current) < (currentCost tmp)
 
 -- | Associate the total value of all following sets to each stamp set of the
 -- sequence.
