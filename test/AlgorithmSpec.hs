@@ -55,7 +55,7 @@ eitherEquals (Left x) (Left y) = x == y
 eitherEquals (Right _) (Left _) = False
 eitherEquals (Left _) (Right _) = False
 eitherEquals (Right x) (Right y) = if (length x) == (length y)
-  then foldr (&&) True (zipWith almostEqualSol x y)
+  then and (zipWith almostEqualSol x y)
   else False
 
 runVariants :: Double -> Seq StampSet -> Either String [Solution]

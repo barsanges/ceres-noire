@@ -108,7 +108,7 @@ almostEqual (StampSet p q) (StampSet p' q') = (abs (p - p') < 1e-12) && (q == q'
 -- | Test if two sequences of stamp sets are equal (float precision: 1e-12).
 almostEqualSeq :: Seq StampSet -> Seq StampSet -> Bool
 almostEqualSeq x y = if (length x) == (length y)
-  then foldr (&&) True (S.zipWith almostEqual x y)
+  then and (S.zipWith almostEqual x y)
   else False
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
