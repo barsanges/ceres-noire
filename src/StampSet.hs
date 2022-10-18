@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 {- |
    Module      : StampSet
    Copyright   : Copyright (C) 2021 barsanges
@@ -37,7 +36,7 @@ import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
 
--- | A set of similar stamps is defined by the unitary price of the price, and
+-- | A set of similar stamps is defined by the unitary price of the stamp, and
 -- the quantity of stamps in the set.
 data StampSet = StampSet Double Int
   deriving Show
@@ -70,7 +69,7 @@ price (StampSet p _) = p
 quantity :: StampSet -> Int
 quantity (StampSet _ q) = q
 
--- | Get the total value of set of stamps.
+-- | Get the total value of a set of stamps.
 setValue :: StampSet -> Double
 setValue (StampSet p q) = p * (fromIntegral q)
 
