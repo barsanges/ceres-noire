@@ -62,7 +62,4 @@ main = do
     Left err -> putStrLn err
     Right inventory -> case optimum (totalCost cli) inventory of
       Left msg -> putStrLn msg
-      Right opt -> do
-        (putStrLn . reprSolution) opt
-        putStrLn "Variants:"
-        (putStrLn . reprVariants) (variants opt)
+      Right opt -> (putStrLn . reprSolution) opt
