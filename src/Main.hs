@@ -12,17 +12,12 @@ import Options.Applicative
 import StampSet
 import Algorithm
 
--- | How the results of the algorithm should be used?
-data Usage = Ask | DryRun | Yes | Variants
-  deriving Eq
-
 -- | Format of the inventory: CSV file or CSV-like string.
 data Input = Fin String | Str String
 
 -- | Command line arguments.
 data Args = Args { totalCost :: Double
                  , input :: Input
-                 , usage :: Usage
                  , comma :: Bool
                  }
 
@@ -43,22 +38,6 @@ argsParser = Args
             <> metavar "STRING"
             <> help "CSV-like string containing a stamps inventory (unitary\
                     \ prices and available quantities)" )))
-  <*> ( ( flag Ask DryRun
-          ( long "dry-run"
-          <> help "If this option is used, the inventory file is not\
-                  \ updated (useless if the option '--string' is used)" ))
-      <|> ( flag' Yes
-            ( long "yes"
-            <> short 'y'
-            <> help "If this option is used, the program does not\
-                    \ ask for confirmation before updating the\
-                    \ inventory file  (useless if the option\
-                    \ '--string' is used)" ))
-      <|> ( flag' Variants
-            ( long "variants"
-            <> help "If this option is used, the program returns\
-                    \ both the optimal solutions and several\
-                    \ (if possible) suboptimal ones" )))
   <*> ( switch
         ( long "comma"
         <> short 'c'
@@ -85,21 +64,5 @@ main = do
       Left msg -> putStrLn msg
       Right opt -> do
         (putStrLn . reprSolution) opt
-        case (usage cli, input cli) of
-          (Ask, Fin f) -> confirm "Do you want to update the inventory (Y/n)?" (update f opt)
-          (Yes, Fin f) -> (update f opt)
-          (Variants, _) -> do
-            putStrLn "Variants:"
-            (putStrLn . reprVariants) (variants opt)
-          _ -> return ()
-      where
-        update f x = writeInventoryFile (comma cli) f (resultingInventory x)
-
--- | Ask for confirmation before performing an action.
-confirm :: String -> IO () -> IO ()
-confirm msg a = do
-  putStrLn msg
-  x <- getLine
-  if (x == "Y") || (x == "y")
-  then a
-  else return ()
+        putStrLn "Variants:"
+        (putStrLn . reprVariants) (variants opt)
