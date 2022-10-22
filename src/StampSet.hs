@@ -75,11 +75,11 @@ setValue (StampSet p q) = p * (fromIntegral q)
 
 -- | Get the total value of a sequence of stamps sets.
 totalValue :: Seq StampSet -> Double
-totalValue = foldr (\ s x -> x + setValue s) 0
+totalValue = (sum . (fmap price))
 
 -- | Get the total number of stamps in a sequence of stamps sets.
 totalQuantity :: Seq StampSet -> Int
-totalQuantity = foldr (\ s x -> x + quantity s) 0
+totalQuantity = (sum . (fmap quantity))
 
 -- | Split a set of stamps in two different parts, one with 'n' pieces and the
 -- other with the rest. If the operation is not feasible ('n < 0' or 'n' is
