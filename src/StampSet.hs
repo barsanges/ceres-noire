@@ -15,6 +15,7 @@ module StampSet (
   setValue,
   totalValue,
   totalQuantity,
+  mkRange,
   split,
   simplify,
   almostEqual,
@@ -80,6 +81,11 @@ totalValue = (sum . (fmap price))
 -- | Get the total number of stamps in a sequence of stamps sets.
 totalQuantity :: Seq StampSet -> Int
 totalQuantity = (sum . (fmap quantity))
+
+-- | Create a sequence of sets of length `quantity s`. The first set
+-- contains one stamp, the second two, etc.
+mkRange :: StampSet -> Seq StampSet
+mkRange (StampSet p q) = S.fromList [ StampSet p i | i <- [1..q] ]
 
 -- | Split a set of stamps in two different parts, one with 'n' pieces and the
 -- other with the rest. If the operation is not feasible ('n < 0' or 'n' is
