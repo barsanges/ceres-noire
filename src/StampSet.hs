@@ -56,6 +56,19 @@ instance Csv.ToNamedRecord StampSet where
     Csv.namedField "price" p,
     Csv.namedField "quantity" q]
 
+instance Eq StampSet where
+  x == y = (abs (price x - price y) < eps)
+           && (abs (quantity x - quantity y) == 0)
+
+instance Ord StampSet where
+  compare x y = if abs (price x - price y) < eps
+                then compare (quantity x) (quantity y)
+                else compare (price x) (price y)
+
+-- | Threshold for float equality.
+eps :: Double
+eps = 1e-12
+
 -- | Create a set of stamp.
 mkStampSet :: Double -> Int -> Maybe StampSet
 mkStampSet p q = if (p > 0) && (q >= 0)
