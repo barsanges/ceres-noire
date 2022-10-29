@@ -82,10 +82,10 @@ totalValue = (sum . (fmap setValue))
 totalQuantity :: Seq StampSet -> Int
 totalQuantity = (sum . (fmap quantity))
 
--- | Create a sequence of sets of length `quantity s`. The first set
--- contains one stamp, the second two, etc.
+-- | Create a sequence of sets of length `1 + quantity s`. The first set
+-- contains zero stamp, the second one, etc, and the last one `quantity s`.
 mkRange :: StampSet -> Seq StampSet
-mkRange (StampSet p q) = S.fromList [ StampSet p i | i <- [1..q] ]
+mkRange (StampSet p q) = S.fromList [ StampSet p i | i <- [0..q] ]
 
 -- | Split a set of stamps in two different parts, one with 'n' pieces and the
 -- other with the rest. If the operation is not feasible ('n < 0' or 'n' is
