@@ -11,9 +11,11 @@ module Algorithm2 (
   dropSupersets
   ) where
 
-import Control.Monad ( join )
-import Data.Sequence ( Seq(..), (<|), (><) )
+import Data.Foldable ( toList )
+import Data.Sequence ( Seq(..), (<|) )
 import qualified Data.Sequence as Seq
+import Data.Set ( Set )
+import qualified Data.Set as Set
 
 import StampSet
 
@@ -28,29 +30,30 @@ withinRange :: Double -> Double -> Collection -> Either String (Seq Collection)
 withinRange low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
-  | otherwise = if Seq.null res
+  | otherwise = if Set.null res
                 then Left "The problem is infeasible!"
-                else Right (Seq.sortBy comp res)
+                else Right (Seq.sortBy comp (Seq.fromList . toList $ res))
     where
       res = solve low up inventory
 
 -- | The function that actually search the sets of stamps whose total value lies
 -- within the given range. Do not perform any check regarding the validity of
 -- the inputs.
-solve :: Double -> Double -> Collection -> Seq Collection
-solve low up inventory = go inventory (Seq.singleton Empty)
+solve :: Double -> Double -> Collection -> Set Collection
+solve low up inventory = go inventory (Set.singleton Empty)
   where
-    go :: Collection -> Seq Collection -> Seq Collection
-    go Empty _ = Empty
-    go (s :<| ss) partial = complete >< complete'
+    go :: Collection -> Set Collection -> Set Collection
+    go Empty _ = Set.empty
+    go (s :<| ss) partial = Set.union complete complete'
       where
-        (partial', complete) = sieve low up (join (fmap (mkCollectionRange s) partial))
+        cols = Set.unions (Set.map (mkCollectionRange s) partial)
+        (partial', complete) = sieve low up cols
         complete' = go ss partial'
 
 -- | Create all collections resulting from the union of `col` and the
 -- elements of `mkRange s`.
-mkCollectionRange :: StampSet -> Collection -> Seq Collection
-mkCollectionRange s col = fmap go (mkRange s)
+mkCollectionRange :: StampSet -> Collection -> Set Collection
+mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
   where
     go :: StampSet -> Collection
     go s' = if quantity s' > 0
@@ -61,14 +64,16 @@ mkCollectionRange s col = fmap go (mkRange s)
 -- total value is lesser than `up`, and on the other hand the ones
 -- whose total value lies between `low` and `up`. All collections
 -- belonging to the second sequence belong also to the first one.
-sieve :: Double -> Double -> Seq Collection -> (Seq Collection, Seq Collection)
-sieve low up = foldr go (Empty, Empty)
+sieve :: Double -> Double -> Set Collection -> (Set Collection, Set Collection)
+sieve low up = foldr go (Set.empty, Set.empty)
   where
-    go :: Collection -> (Seq Collection, Seq Collection) -> (Seq Collection, Seq Collection)
+    go :: Collection
+       -> (Set Collection, Set Collection)
+       -> (Set Collection, Set Collection)
     go xs (tmp, res)
       | totalValue xs > up = (tmp, res)
-      | totalValue xs < low = (xs <| tmp, res)
-      | otherwise = (xs <| tmp, xs <| res)
+      | totalValue xs < low = (Set.insert xs tmp, res)
+      | otherwise = (Set.insert xs tmp, Set.insert xs res)
 
 -- | Compare two collections: a collection is "smaller" than the other
 -- if it is less costly or, if they have the same value, if it
