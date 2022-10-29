@@ -13,7 +13,7 @@ module Algorithm2 (
 
 import Control.Monad ( join )
 import Data.Sequence ( Seq(..), (<|), (><) )
-import qualified Data.Sequence as S
+import qualified Data.Sequence as Seq
 
 import StampSet
 
@@ -21,16 +21,16 @@ type Collection = Seq StampSet -- FIXME: find another name?
 
 -- | Filter the sets that are supersets of other sets in the sequence.
 dropSupersets :: Seq Collection -> Seq Collection
-dropSupersets xs = S.filter (noStrictSubset xs) xs
+dropSupersets xs = Seq.filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
 withinRange :: Double -> Double -> Collection -> Either String (Seq Collection)
 withinRange low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
-  | otherwise = if S.null res
+  | otherwise = if Seq.null res
                 then Left "The problem is infeasible!"
-                else Right (S.sortBy comp res)
+                else Right (Seq.sortBy comp res)
     where
       res = solve low up inventory
 
@@ -38,7 +38,7 @@ withinRange low up inventory
 -- within the given range. Do not perform any check regarding the validity of
 -- the inputs.
 solve :: Double -> Double -> Collection -> Seq Collection
-solve low up inventory = go inventory (S.singleton Empty)
+solve low up inventory = go inventory (Seq.singleton Empty)
   where
     go :: Collection -> Seq Collection -> Seq Collection
     go Empty _ = Empty
