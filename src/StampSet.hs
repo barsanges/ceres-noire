@@ -76,7 +76,7 @@ setValue (StampSet p q) = p * (fromIntegral q)
 
 -- | Get the total value of a sequence of stamps sets.
 totalValue :: Seq StampSet -> Double
-totalValue = (sum . (fmap price))
+totalValue = (sum . (fmap setValue))
 
 -- | Get the total number of stamps in a sequence of stamps sets.
 totalQuantity :: Seq StampSet -> Int
