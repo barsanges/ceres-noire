@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {- |
    Module      : AlgorithmSpec
    Copyright   : Copyright (C) 2021 barsanges
@@ -14,6 +15,7 @@ import Test.QuickCheck
 import Data.Either ( isRight )
 import Data.Maybe ( fromJust )
 import Data.Sequence ( Seq(..), fromList )
+import qualified Data.Sequence as Seq
 
 import Algorithm
 import StampSet
@@ -24,140 +26,145 @@ instance Arbitrary StampSet where
     q <- arbitrary
     return (fromJust (mkStampSet (1e-9 + abs p) (abs q)))
 
-s1 :: StampSet
-s1 = fromJust (mkStampSet 1.05 3)
-
-s2 :: StampSet
-s2 = fromJust (mkStampSet 1.82 1)
-
-s3 :: StampSet
-s3 = fromJust (mkStampSet 0.05 4)
-
 sq1 :: Seq StampSet
-sq1 = fromList [s1, s2, s3]
+sq1 = fromList [ fromJust (mkStampSet 1.08 3)
+               , fromJust (mkStampSet 1.43 2)
+               , fromJust (mkStampSet 2.86 1)
+               ]
 
 sq2 :: Seq StampSet
-sq2 = fromList [fromJust (mkStampSet 3 5),
-                fromJust (mkStampSet 1 5),
-                fromJust (mkStampSet 0.5 10)]
+sq2 = fromList [ fromJust (mkStampSet 1.28 6)
+               , fromJust (mkStampSet 2.32 2)
+               , fromJust (mkStampSet 2.56 2)
+               ]
 
-type PseudoSol = (Double, Seq StampSet, Seq StampSet)
+sol1 :: Seq (Seq StampSet)
+sol1 = fromList [ fromList [fromJust (mkStampSet 2.86 1)]
+                , fromList [fromJust (mkStampSet 1.43 2)]
+                ]
 
--- FIXME: share some code between the two test modules.
-eitherEqual :: Either String Solution -> Either String PseudoSol -> Bool
-eitherEqual (Left x) (Left y) = x == y
-eitherEqual (Right _) (Left _) = False
-eitherEqual (Left _) (Right _) = False
-eitherEqual (Right x) (Right y) = x `almostEqualSol` y
+sol2 :: Seq (Seq StampSet)
+sol2 = fromList [ fromList [fromJust (mkStampSet 2.32 1)] ]
 
-eitherEquals :: Either String [Solution] -> Either String [PseudoSol] -> Bool
-eitherEquals (Left x) (Left y) = x == y
-eitherEquals (Right _) (Left _) = False
-eitherEquals (Left _) (Right _) = False
-eitherEquals (Right x) (Right y) = if (length x) == (length y)
-  then and (zipWith almostEqualSol x y)
-  else False
+sol3 :: Seq (Seq StampSet)
+sol3 = fromList [ fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 2.32 2), fromJust (mkStampSet 1.28 1)]
+                , fromList [fromJust (mkStampSet 2.32 2), fromJust (mkStampSet 1.28 3)]
+                , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 1)]
+                , fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 3)]
+                , fromList [fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 5)]
+                , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 1.28 3)]
+                , fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 1.28 5)]
+                , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 2.32 2)]
+                , fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 2.32 2), fromJust (mkStampSet 1.28 2)]
+                , fromList [fromJust (mkStampSet 2.32 2), fromJust (mkStampSet 1.28 4)]
+                , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 2)]
+                , fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 4)]
+                , fromList [fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 6)]
+                ]
 
-sol1 :: PseudoSol
-sol1 = (1.10,
-        fromList [fromJust (mkStampSet 1.05 1),
-                  fromJust (mkStampSet 0.05 1)],
-        fromList [fromJust (mkStampSet 1.82 1),
-                  fromJust (mkStampSet 1.05 2),
-                  fromJust (mkStampSet 0.05 3)])
-
-sol2 :: PseudoSol
-sol2 = (3.5,
-        fromList [fromJust (mkStampSet 3 1),
-                  fromJust (mkStampSet 0.5 1)],
-        fromList [fromJust (mkStampSet 3 4),
-                  fromJust (mkStampSet 1 5),
-                  fromJust (mkStampSet 0.5 9)])
-
-sol3 :: PseudoSol
-sol3 = (2,
-        fromList [fromJust (mkStampSet 1 2)],
-        fromList [fromJust (mkStampSet 3 5),
-                  fromJust (mkStampSet 1 3),
-                  fromJust (mkStampSet 0.5 10)])
-
-var1 :: PseudoSol
-var1 = (3.5,
-        fromList [fromJust (mkStampSet 1 3),
-                  fromJust (mkStampSet 0.5 1)],
-        fromList [fromJust (mkStampSet 3 5),
-                  fromJust (mkStampSet 1 2),
-                  fromJust (mkStampSet 0.5 9)])
-
-var2 :: PseudoSol
-var2 = (4,
-        fromList [fromJust (mkStampSet 3 1),
-                  fromJust (mkStampSet 1 1)],
-        fromList [fromJust (mkStampSet 3 4),
-                  fromJust (mkStampSet 1 4),
-                  fromJust (mkStampSet 0.5 10)])
-
-var3 :: PseudoSol
-var3 = (2,
-        fromList [fromJust (mkStampSet 1 1),
-                  fromJust (mkStampSet 0.5 2)],
-        fromList [fromJust (mkStampSet 3 5),
-                  fromJust (mkStampSet 1 4),
-                  fromJust (mkStampSet 0.5 8)])
-
-probGen :: Int -> Gen (Double, Seq StampSet)
+probGen :: Int -> Gen (Double, Double, Seq StampSet)
 probGen n = do
   x <- arbitrary
-  y <- resize n (fmap fromList (listOf arbitrary))
-  return (x, y)
+  y <- arbitrary
+  z <- resize n (fmap fromList (listOf arbitrary))
+  return (x, y, z)
 
-propTotalCost (x, inventory) = ok ==> cover 99 ok "non-trivial" prop
+propTotalCost (x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
     x' = 0.01 + abs x
-    res = optimum x' inventory
-    ok = isRight res
+    y' = x' + 10 * (abs y)
+    res = withinRange x' y' inventory
+    ok = case res of
+      Left _ -> False
+      Right zs -> length zs > 0
     prop = case res of
       Left _ -> False -- Never happens in practice.
-      Right sol -> solutionCost sol >= x'
+      Right zs -> all (\ z -> (totalValue z) >= x' && (totalValue z) <= y') zs
 
-propResultingInventory (x, inventory) = ok ==> cover 99 ok "non-trivial" prop
-  where
-    x' = 0.01 + abs x
-    res = optimum x' inventory
-    ok = isRight res
-    prop = case res of
-      Left _ -> False -- Never happens in practice.
-      Right sol -> foldr go True (resultingInventory sol)
-      where
-        go :: StampSet -> Bool -> Bool
-        go s b = b && (quantity s >= 0)
+multiple1 :: Seq (Seq StampSet)
+multiple1 = fromList [ fromList [fromJust (mkStampSet 1.28 1)]
+                     , fromList [fromJust (mkStampSet 1.28 2)]
+                     ]
+
+simplified1 :: Seq (Seq StampSet)
+simplified1 = fromList [ fromList [fromJust (mkStampSet 1.28 1)]
+                       ]
+
+multiple2 :: Seq (Seq StampSet)
+multiple2 = fromList [ fromList [fromJust (mkStampSet 1.28 1)]
+                     , fromList [fromJust (mkStampSet 1.28 1), fromJust (mkStampSet 0.10 1)]
+                     ]
+
+simplified2 :: Seq (Seq StampSet)
+simplified2 = fromList [ fromList [fromJust (mkStampSet 1.28 1)]
+                       ]
+
+multiple3 :: Seq (Seq StampSet)
+multiple3 = fromList [ fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 1.28 3)]
+                     , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 1.28 1)]
+                     ]
+
+simplified3 :: Seq (Seq StampSet)
+simplified3 = fromList [ fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 1.28 3)]
+                       , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 1.28 1)]
+                       ]
+
+simplified4 :: Seq (Seq StampSet)
+simplified4 = fromList [ fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 2.32 2), fromJust (mkStampSet 1.28 1)]
+                       , fromList [fromJust (mkStampSet 2.32 2), fromJust (mkStampSet 1.28 3)]
+                       , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 1)]
+                       , fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 3)]
+                       , fromList [fromJust (mkStampSet 2.32 1), fromJust (mkStampSet 1.28 5)]
+                       , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 1.28 3)]
+                       , fromList [fromJust (mkStampSet 2.56 1), fromJust (mkStampSet 1.28 5)]
+                       , fromList [fromJust (mkStampSet 2.56 2), fromJust (mkStampSet 2.32 2)]
+                       ]
 
 spec :: Spec
 spec = do
-  describe "optimum" $ do
-    it "choose the least costly combination of stamps for a letter" $
-      ((optimum 1.06 sq1) `eitherEqual` (Right sol1)) `shouldBe` True
+  describe "withinRange" $ do
+    it "finds the sets of stamps whose total value lies within the given range (1)" $
+      (withinRange 2.80 2.90 sq1) `shouldBe` (Right sol1)
 
-    it "choose the optimal combination with the least number of stamps (1)" $
-      ((optimum 3.5 sq2) `eitherEqual` (Right sol2)) `shouldBe` True
+    it "finds the sets of stamps whose total value lies within the given range (2)" $
+      (withinRange 2.32 2.33 sq2) `shouldBe` (Right sol2)
 
-    it "choose the optimal combination with the least number of stamps (2)" $
-      ((optimum 2 sq2) `eitherEqual` (Right sol3)) `shouldBe` True
+    it "finds the sets of stamps whose total value lies within the given range (3)" $
+      (withinRange 8 10 sq2) `shouldBe` (Right sol3)
 
     it "should fail if the cost of the letter is bigger than the total value of the inventory" $
-      ((optimum 6 sq1) `eitherEqual` (Left "The problem is infeasible!")) `shouldBe` True
-
-    it "should fail if the cost is zero" $
-      ((optimum 0 sq1) `eitherEqual` (Left "The total cost should be a positive float!")) `shouldBe` True
+      (withinRange 11 11 sq1) `shouldBe` (Left "The problem is infeasible!")
 
     it "should always fail if the inventory is empty" $ property $
-      \ x -> ((optimum (0.001 + abs x) Empty) `eitherEqual` (Left "The problem is infeasible!"))
+      \ x -> ((withinRange (abs x) (0.1 + abs x) Empty) `shouldBe` (Left "The problem is infeasible!"))
 
-    it "should always fail if the total cost < 0" $ property $
-      \ x -> ((optimum (-(abs x)) Empty) `eitherEqual` (Left "The total cost should be a positive float!"))
+    it "should always fail if the minimum value is negative" $ property $
+      \ x -> ((withinRange (-(abs x) - 0.1) (abs x) Empty) `shouldBe` (Left "The minimum value should be a positive float!"))
 
-    it "should always give a solution (if it exists) with a cost greater or equal to the cost of the letter" $ property $
+    it "should always fail if the maximum value is lower than the minimum value" $ property $
+      \ x -> ((withinRange (abs x + 0.1) ((abs x + 0.1) * 0.5) Empty) `shouldBe` (Left "The maximum value should be greater than the minimum value!"))
+
+    it "should always give solutions (if they exists) with a cost greater or equal to the cost of the letter" $ property $
       forAll (probGen 5) propTotalCost
 
-    it "should never return an inventory with a negative number of stamps" $ property $
-      forAll (probGen 5) propResultingInventory
+  describe "dropSupersets" $ do
+    it "filter the sets that are supersets of other sets in the sequence (1)" $
+      (dropSupersets multiple1) `shouldBe` simplified1
+
+    it "filter the sets that are supersets of other sets in the sequence (2)" $
+      (dropSupersets multiple2) `shouldBe` simplified2
+
+    it "filter the sets that are supersets of other sets in the sequence (3)" $
+      (dropSupersets multiple3) `shouldBe` simplified3
+
+    it "filter the sets that are supersets of other sets in the sequence (4)" $
+      (dropSupersets sol3) `shouldBe` simplified4
+
+    it "filter the sets that are supersets of other sets in the sequence (5)" $
+      (dropSupersets Empty) `shouldBe` Empty
+
+    it "should never return a sequence longer than the original one" $ property $
+      \ xs -> ((length $ dropSupersets xs) <= (length xs))
+
+    it "should leave singletons untouched" $ property $
+      \ x -> ((dropSupersets $ Seq.singleton $ Seq.singleton x) == (Seq.singleton $ Seq.singleton x))

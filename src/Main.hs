@@ -16,7 +16,8 @@ import Algorithm
 data Input = Fin String | Str String
 
 -- | Command line arguments.
-data Args = Args { totalCost :: Double
+data Args = Args { low :: Double
+                 , up :: Double
                  , input :: Input
                  , comma :: Bool
                  }
@@ -24,8 +25,11 @@ data Args = Args { totalCost :: Double
 argsParser :: Parser Args
 argsParser = Args
   <$> ( argument auto
-        ( metavar "COST"
-        <> help "Cost of the letter in euros" ))
+        ( metavar "MIN"
+        <> help "Minimal cost of the letter in euros" ))
+  <*> ( argument auto
+        ( metavar "MAX"
+        <> help "Maximal cost of the letter in euros" ))
   <*> ( ( Fin <$> strOption
           ( long "file"
           <> short 'f'
@@ -60,6 +64,6 @@ main = do
       Str s -> pure (readInventoryString (comma cli) s)
   case maybeInventory of
     Left err -> putStrLn err
-    Right inventory -> case optimum (totalCost cli) inventory of
+    Right inventory -> case withinRange (low cli) (up cli) inventory of
       Left msg -> putStrLn msg
-      Right opt -> (putStrLn . reprSolution) opt
+      Right res -> (putStrLn . reprCollections) (dropSupersets res)

@@ -1,119 +1,129 @@
 {- |
    Module      : Algorithm
-   Copyright   : Copyright (C) 2021 barsanges
+   Copyright   : Copyright (C) 2022 barsanges
    License     : GNU GPL, version 3
 
-Solve the postage cost problem.
+Find the sets of stamps whose total value lies within the given range.
 -}
 
 module Algorithm (
-  module Solution,
-  optimum
+  withinRange,
+  dropSupersets,
+  reprCollection,
+  reprCollections
   ) where
 
+import Data.Foldable ( toList )
+import Data.List ( intercalate )
 import Data.Sequence ( Seq(..), (<|) )
-import qualified Data.Sequence as S
+import qualified Data.Sequence as Seq
+import Data.Set ( Set )
+import qualified Data.Set as Set
+import Numeric ( showFFloat )
 
-import Solution
 import StampSet
 
--- | Find the optimal solution of the postage cost problem.
-optimum :: Double -> Seq StampSet -> Either String Solution
-optimum total inventory = if total <= 0
-  then Left "The total cost should be a positive float!"
-  else case maybeSol of
-    Nothing -> Left "The problem is infeasible!"
-    Just sol -> Right sol
-  where
-    maybeSol = optimum' total (warmUp inventory') (emptySolution total) startingSol
-    -- The fact that the sequence is sorted may speed up the algorithm in
-    -- some cases.
-    inventory' = reorder inventory
-    startingSol = initialize total inventory'
+type Collection = Seq StampSet -- FIXME: find another name?
 
--- | Recursively find an optimal solution.
-optimum' :: Double -> Seq (Double, StampSet) -> PartialSolution -> Maybe Solution -> Maybe Solution
-optimum' total Empty tmp best = if total <= 0
-  then select best (toCompleteSolution tmp Empty)
-  else best
-optimum' total ((v, s) :<| stampSets) tmp best
-  | keepCurrent best tmp = best
-  | total > setValue s + v = best
-  | otherwise = foldr go best [0..(min q n)]
+-- | Filter the sets that are supersets of other sets in the sequence.
+dropSupersets :: Seq Collection -> Seq Collection
+dropSupersets xs = Seq.filter (noStrictSubset xs) xs
+
+-- | Find the sets of stamps whose total value lies within the given range.
+withinRange :: Double -> Double -> Collection -> Either String (Seq Collection)
+withinRange low up inventory
+  | low < 0 = Left "The minimum value should be a positive float!"
+  | up < low = Left "The maximum value should be greater than the minimum value!"
+  | otherwise = if Set.null res
+                then Left "The problem is infeasible!"
+                else Right (Seq.sortBy comp (Seq.fromList . toList $ res))
+    where
+      res = solve low up inventory
+
+-- | The function that actually search the sets of stamps whose total value lies
+-- within the given range. Do not perform any check regarding the validity of
+-- the inputs.
+solve :: Double -> Double -> Collection -> Set Collection
+solve low up inventory = go inventory (Set.singleton Empty)
   where
-    p = price s
-    q = quantity s
-    n = ceiling (total / p)
-    go :: Int -> Maybe Solution -> Maybe Solution
-    go k b = if total' < 0
-      then select b (toCompleteSolution tmp' (fmap snd stampSets))
-      else optimum' total' stampSets tmp' b
+    go :: Collection -> Set Collection -> Set Collection
+    go Empty _ = Set.empty
+    go (s :<| ss) partial = Set.union complete complete'
       where
-        total' = total - p * (fromIntegral k)
-        tmp' = add tmp s k
+        cols = Set.unions (Set.map (mkCollectionRange s) partial)
+        (partial', complete) = sieve low up cols
+        complete' = go ss partial'
 
--- | Select the best solution.
-select :: Maybe Solution -> Solution -> Maybe Solution
-select Nothing y = Just y
-select (Just x) y
-  | abs (solutionCost x - solutionCost y) < 1e-12 = if (solutionNStamps x) <= (solutionNStamps y)
-    then Just x
-    else Just y
-  | (solutionCost x) < (solutionCost y) = Just x
-  | otherwise = Just y
-
--- | Keep the current solution.
-keepCurrent :: Maybe Solution -> PartialSolution -> Bool
-keepCurrent Nothing _ = False
-keepCurrent (Just current) tmp =
-  if abs (solutionCost current - currentCost tmp) < 1e-12
-  then (solutionNStamps current) < (currentNStamps tmp)
-  else (solutionCost current) < (currentCost tmp)
-
--- | Associate the total value of all following sets to each stamp set of the
--- sequence.
-warmUp :: Seq StampSet -> Seq (Double, StampSet)
-warmUp sq = snd (foldr go (0, Empty) sq)
+-- | Create all collections resulting from the union of `col` and the
+-- elements of `mkRange s`.
+mkCollectionRange :: StampSet -> Collection -> Set Collection
+mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
   where
-    go :: StampSet -> (Double, Seq (Double, StampSet)) -> (Double, Seq (Double, StampSet))
-    go x (t, s) = (t + setValue x, (t, x) <| s)
+    go :: StampSet -> Collection
+    go s' = if quantity s' > 0
+            then s' <| col
+            else col
 
--- | Find a simple solution (likely suboptimal, but hopefully not too much) to
--- a given problem. It will be used as an upper bound for the optimization.
-initialize :: Double -> Seq StampSet -> Maybe Solution
-initialize total collection = case s1 of
-  Nothing -> Nothing -- The problem is infeasible.
-  Just sol -> select s2 sol
+-- | Sort the given collections, and return on one hand the ones whose
+-- total value is lesser than `up`, and on the other hand the ones
+-- whose total value lies between `low` and `up`. All collections
+-- belonging to the second sequence belong also to the first one.
+sieve :: Double -> Double -> Set Collection -> (Set Collection, Set Collection)
+sieve low up = foldr go (Set.empty, Set.empty)
   where
-    s1 = topToBottom total collection
-    s2 = bottomToTop total collection
+    go :: Collection
+       -> (Set Collection, Set Collection)
+       -> (Set Collection, Set Collection)
+    go xs (tmp, res)
+      | totalValue xs > up = (tmp, res)
+      | totalValue xs < low = (Set.insert xs tmp, res)
+      | otherwise = (Set.insert xs tmp, Set.insert xs res)
 
--- | Find a solution (if any) by choosing the most costly stamps first.
-topToBottom :: Double -> Seq StampSet -> Maybe Solution
-topToBottom total sq = go total sq (emptySolution total)
+-- | Compare two collections: a collection is "smaller" than the other
+-- if it is less costly or, if they have the same value, if it
+-- contains less stamps. If they have the same cost and contain the
+-- same number of stamps, they are considered equal (even if they do
+-- not contain the same stamps!).
+comp :: Collection -> Collection -> Ordering
+comp xs ys
+  | val == LT = LT
+  | val == EQ = qty
+  | otherwise = GT
   where
-    go :: Double -> Seq StampSet -> PartialSolution -> Maybe Solution
-    go t Empty tmp = if t <= 0
-      then Just (toCompleteSolution tmp Empty)
-      else Nothing
-    go t (s :<| stampSets) tmp
-      | t <= 0 = Just (toCompleteSolution tmp (s <| stampSets))
-      | t' <= 0 = Just (toCompleteSolution tmp1 stampSets)
-      | otherwise = go t' stampSets tmp2
+    val = compare (totalValue xs) (totalValue ys)
+    qty = compare (totalQuantity xs) (totalQuantity ys)
+
+-- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
+noStrictSubset :: Seq Collection -> Collection -> Bool
+noStrictSubset ss s = not (any (isStrictSubset' s) ss)
+
+-- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
+isStrictSubset :: Collection -> Collection -> Bool
+isStrictSubset s s' = (all go s) && (totalQuantity s < totalQuantity s')
+  where
+    go :: StampSet -> Bool
+    go x = any og s'
       where
-        t' = t - setValue s
-        n = ceiling (t / (price s))
-        tmp1 = add tmp s n
-        tmp2 = add tmp s (quantity s)
+        og :: StampSet -> Bool
+        og y = (price x == price y) && (quantity x <= quantity y)
 
--- | Find a solution (if any) by choosing the least costly stamps first.
-bottomToTop :: Double -> Seq StampSet -> Maybe Solution
-bottomToTop total sq = case msol of
-  Nothing -> Nothing
-  Just (Complete c n t used left) -> Just (Complete c n t (S.reverse used) (S.reverse left))
+-- | Same as `isStrictSubset`, but with the arguments reversed:
+-- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
+-- `s'`.
+isStrictSubset' :: Collection -> Collection -> Bool
+isStrictSubset' = flip isStrictSubset
+
+-- | Turn a collection into a human readable string. The resulting string is not
+-- exhaustive and should not be used for serialisation.
+reprCollection :: Collection -> String
+reprCollection xs = fmtFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
-    msol = topToBottom total (S.reverse sq)
+    fmtFloat = showFFloat (Just 2)
+    stamps = intercalate ", " (toList (fmap go xs))
+    go :: StampSet -> String
+    go s = (show (quantity s)) ++ "x at " ++ (fmtFloat (price s) $ " EUR")
 
--- | Reorder a sequence of stamps sets by decreasing prices.
-reorder :: Seq StampSet -> Seq StampSet
-reorder = S.sortOn (\ x -> -(price x))
+-- | Turn a list of collections into a human readable string. See also
+-- 'reprCollection.'
+reprCollections :: Seq Collection -> String
+reprCollections seqs = intercalate "\n" (toList $ fmap reprCollection seqs)
