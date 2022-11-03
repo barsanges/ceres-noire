@@ -95,13 +95,13 @@ noStrictSubset ss s = not (any (isStrictSubset' s) ss)
 
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
 isStrictSubset :: Collection -> Collection -> Bool
-isStrictSubset s s' = all go s
+isStrictSubset s s' = (all go s) && (totalQuantity s < totalQuantity s')
   where
     go :: StampSet -> Bool
     go x = any og s'
       where
         og :: StampSet -> Bool
-        og y = (price x == price y) && (quantity x < quantity y)
+        og y = (price x == price y) && (quantity x <= quantity y)
 
 -- | Same as `isStrictSubset`, but with the arguments reversed:
 -- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
