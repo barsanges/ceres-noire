@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {- |
    Module      : StampSetSpec
    Copyright   : Copyright (C) 2021 barsanges
@@ -30,86 +30,67 @@ s1 = fromJust (mkStampSet 1.1 2)
 s2 :: StampSet
 s2 = fromJust (mkStampSet 2.2 1)
 
-s3 :: StampSet
-s3 = fromJust (mkStampSet 0.57 21)
-
 sq1 :: Seq StampSet
 sq1 = fromList [s1, s2]
 
-eitherEqual :: Either String (Seq StampSet) -> Either String (Seq StampSet) -> Bool
-eitherEqual (Left x) (Left y) = x == y
-eitherEqual (Right _) (Left _) = False
-eitherEqual (Left _) (Right _) = False
-eitherEqual (Right x) (Right y) = x `almostEqualSeq` y
+stampSetEq :: StampSet -> Bool
+stampSetEq x = x == x
 
 spec :: Spec
 spec = do
-  describe "almostEqual" $ do
-    it "compares two sets of stamps (1)" $
-      (s1 `almostEqual` s1) `shouldBe` True
+  describe "StampSet" $ do
+    it "is an instance of Eq (1)" $
+      s1 `shouldBe` s1
 
-    it "compares two sets of stamps (2)" $
-      (s1 `almostEqual` s2) `shouldBe` False
+    it "is an instance of Eq (2)" $
+      s1 `shouldNotBe` s2
 
-    it "always return True when comparing a stamp set with itself" $ property $
-      \ x -> x `almostEqual` x
-
-  describe "almostEqualSeq" $ do
-    it "compares two sequences of stamp sets (1)" $
-      (sq1 `almostEqualSeq` sq1)  `shouldBe` True
-
-    it "compares two sequences of stamp sets (2)" $
-      (sq1 `almostEqualSeq` (fromList [s1, s3]))  `shouldBe` False
-
-    it "compares two sequences of stamp sets (3)" $
-      (sq1 `almostEqualSeq` (fromList [s1]))  `shouldBe` False
-
-    it "always return True when comparing a sequence of stamp set with itself" $ property $
-      \ x -> x `almostEqualSeq` x
+    it "a stamp set is always equal to itself" $ property $
+      stampSetEq
 
   describe "fromByteString, with semi-colon" $ do
     it "converts a byte string to a sequence of stamp sets" $
-      ((fromByteString False "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `eitherEqual` (Right sq1)) `shouldBe` True
+      (fromByteString False "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)
 
     it "accepts a header with more columns than requested" $
-      ((fromByteString False "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `eitherEqual` (Right sq1)) `shouldBe` True
+      (fromByteString False "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `shouldBe` (Right sq1)
 
     it "fails if the header does not contain 'price' and 'quantity'" $
-      ((fromByteString False "foo;bar\r\n1.1;27\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")) `shouldBe` True
+      (fromByteString False "foo;bar\r\n1.1;27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
 
     it "fails if fields are missing" $
-      ((fromByteString False "price;quantity\r\n1.1;\r\n2.2;1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2;1\\r\\n\"")) `shouldBe` True
+      (fromByteString False "price;quantity\r\n1.1;\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2;1\\r\\n\"")
 
     it "fails if fields have the wrong type" $
-      ((fromByteString False "price;quantity\r\n1.1;abc\r\n2.2;1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2;1\\r\\n\"")) `shouldBe` True
+      (fromByteString False "price;quantity\r\n1.1;abc\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2;1\\r\\n\"")
 
     it "fails if the string contains no data" $
-      ((fromByteString False "price;quantity") `eitherEqual` (Left "parse error (not enough input) at \"\"")) `shouldBe` True
+      (fromByteString False "price;quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
 
     it "fails if the string contains negative values" $
-      ((fromByteString False "price;quantity\r\n1.1;-2\r\n2.2;1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2;1\\r\\n\"")) `shouldBe` True
+      (fromByteString False "price;quantity\r\n1.1;-2\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2;1\\r\\n\"")
 
   describe "fromByteString, with comma" $ do
     it "converts a byte string to a sequence of stamp sets" $
-      ((fromByteString True "price,quantity\r\n1.1,2\r\n2.2,1\r\n") `eitherEqual` (Right sq1)) `shouldBe` True
+      (fromByteString True "price,quantity\r\n1.1,2\r\n2.2,1\r\n") `shouldBe` (Right sq1)
 
     it "accepts a header with more columns than requested" $
-      ((fromByteString True "price,quantity,foo\r\n1.1,2,abc\r\n2.2,1,xyz\r\n") `eitherEqual` (Right sq1)) `shouldBe` True
+      (fromByteString True "price,quantity,foo\r\n1.1,2,abc\r\n2.2,1,xyz\r\n") `shouldBe` (Right sq1)
 
     it "fails if the header does not contain 'price' and 'quantity'" $
-      ((fromByteString True "foo,bar\r\n1.1,27\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")) `shouldBe` True
+      (fromByteString True "foo,bar\r\n1.1,27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
 
     it "fails if fields are missing" $
-      ((fromByteString True "price,quantity\r\n1.1,\r\n2.2,1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2,1\\r\\n\"")) `shouldBe` True
+      (fromByteString True "price,quantity\r\n1.1,\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2,1\\r\\n\"")
 
     it "fails if fields have the wrong type" $
-      ((fromByteString True "price,quantity\r\n1.1,abc\r\n2.2,1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2,1\\r\\n\"")) `shouldBe` True
+      (fromByteString True "price,quantity\r\n1.1,abc\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2,1\\r\\n\"")
 
     it "fails if the string contains no data" $
-      ((fromByteString True "price,quantity") `eitherEqual` (Left "parse error (not enough input) at \"\"")) `shouldBe` True
+      (fromByteString True "price,quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
 
     it "fails if the string contains negative values" $
-      ((fromByteString True "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `eitherEqual` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")) `shouldBe` True
+      (fromByteString True "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")
 
   describe "toByteString, with semi-colon" $ do
     it "converts a sequence of stamp sets to a byte string" $

@@ -18,8 +18,6 @@ module StampSet (
   mkRange,
   split,
   simplify,
-  almostEqual,
-  almostEqualSeq,
   fromByteString,
   readInventoryFile,
   readInventoryString,
@@ -119,16 +117,6 @@ simplify ((StampSet p q) :<| xs) = if q' > 0
   where
     (ys, xs') = S.partition (\ y -> abs (price y - p) < 1e-12) xs
     q' = q + totalQuantity ys
-
--- | Test if two stamp sets are equal (float precision: 1e-12).
-almostEqual :: StampSet -> StampSet -> Bool
-almostEqual (StampSet p q) (StampSet p' q') = (abs (p - p') < 1e-12) && (q == q')
-
--- | Test if two sequences of stamp sets are equal (float precision: 1e-12).
-almostEqualSeq :: Seq StampSet -> Seq StampSet -> Bool
-almostEqualSeq x y = if (length x) == (length y)
-  then and (S.zipWith almostEqual x y)
-  else False
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
 fromByteString :: Bool -> BL.ByteString -> Either String (Seq StampSet)
