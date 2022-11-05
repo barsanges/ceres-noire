@@ -12,7 +12,6 @@ module AlgorithmSpec ( spec ) where
 import Test.Hspec
 import Test.QuickCheck
 
-import Data.Either ( isRight )
 import Data.Maybe ( fromJust )
 import Data.Sequence ( Seq(..), fromList )
 import qualified Data.Sequence as Seq
