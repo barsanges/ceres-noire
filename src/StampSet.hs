@@ -21,14 +21,11 @@ module StampSet (
   fromByteString,
   readInventoryFile,
   readInventoryString,
-  toByteString,
-  writeInventoryFile
   ) where
 
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
-import Data.Foldable ( toList )
 import Data.Sequence ( Seq(..), (<|), fromList )
 import qualified Data.Sequence as S
 import qualified Data.Text.Lazy as T
@@ -137,16 +134,3 @@ readInventoryFile comma fname = do
 -- | Read a sequence of stamp sets from a CSV-like string.
 readInventoryString :: Bool -> String -> Either String (Seq StampSet)
 readInventoryString comma csvData = fromByteString comma (encodeUtf8 . T.pack $ csvData)
-
--- | Turn a sequence of stamp sets to a CSV-like bytestring.
-toByteString :: Bool -> (Seq StampSet) -> BL.ByteString
-toByteString comma stamps = Csv.encodeByNameWith myOptions header (toList stamps)
-  where
-    header = V.fromList ["price", "quantity"]
-    myOptions = if comma
-      then Csv.defaultEncodeOptions { Csv.encDelimiter = fromIntegral (ord ',') }
-      else Csv.defaultEncodeOptions { Csv.encDelimiter = fromIntegral (ord ';') }
-
--- | Read a sequence of stamp sets to a CSV file.
-writeInventoryFile :: Bool -> String -> (Seq StampSet) -> IO ()
-writeInventoryFile comma fname stamps = BL.writeFile fname (toByteString comma stamps)

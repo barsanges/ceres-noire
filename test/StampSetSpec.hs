@@ -91,11 +91,3 @@ spec = do
 
     it "fails if the string contains negative values" $
       (fromByteString True "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")
-
-  describe "toByteString, with semi-colon" $ do
-    it "converts a sequence of stamp sets to a byte string" $
-      toByteString False sq1 `shouldBe` "price;quantity\r\n1.1;2\r\n2.2;1\r\n"
-
-  describe "toByteString, with comma" $ do
-    it "converts a sequence of stamp sets to a byte string" $
-      toByteString True sq1 `shouldBe` "price,quantity\r\n1.1,2\r\n2.2,1\r\n"
