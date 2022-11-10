@@ -20,6 +20,7 @@ data Args = Args { low :: Double
                  , up :: Double
                  , input :: Input
                  , comma :: Bool
+                 , decimalPlaces :: Int
                  }
 
 argsParser :: Parser Args
@@ -46,6 +47,14 @@ argsParser = Args
         ( long "comma"
         <> short 'c'
         <> help "use commas instead of semi-colons as CSV separator" ))
+  <*> (option auto
+       ( long "decimal-places"
+         <> short 'd'
+         <> metavar "DECIMAL_PLACES"
+         <> value 2
+         <> showDefault
+         <> help "number of decimal places to use"
+       ))
 
 -- | Command line parser for 'ceres-noire'.
 args :: ParserInfo Args
@@ -59,11 +68,14 @@ args = info (argsParser <**> helper)
 main :: IO ()
 main = do
   cli <- execParser args
+  let dp = decimalPlaces cli
+  let low' = round ((low cli) * (10**(fromIntegral dp)))
+  let up' = round ((up cli) * (10**(fromIntegral dp)))
   maybeInventory <- case input cli of
-      Fin fin -> readInventoryFile (comma cli) fin
-      Str s -> pure (readInventoryString (comma cli) s)
+      Fin fin -> readInventoryFile (comma cli) dp fin
+      Str s -> pure (readInventoryString (comma cli) dp s)
   case maybeInventory of
     Left err -> putStrLn err
-    Right inventory -> case withinRange (low cli) (up cli) inventory of
+    Right inventory -> case withinRange low' up' inventory of
       Left msg -> putStrLn msg
-      Right res -> (putStrLn . reprCollections) (dropSupersets res)
+      Right res -> putStrLn (reprCollections dp (dropSupersets res))

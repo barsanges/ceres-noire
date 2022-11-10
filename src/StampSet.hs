@@ -33,44 +33,37 @@ import qualified Data.Vector as V
 
 -- | A set of similar stamps is defined by the unitary price of the stamp, and
 -- the quantity of stamps in the set.
-data StampSet = StampSet Double Int
+data StampSet = StampSet Int Int
   deriving Show
 
-instance Csv.FromNamedRecord StampSet where
-  parseNamedRecord r = do
-    p <- Csv.lookup r "price"
-    q <- Csv.lookup r "quantity"
-    let s = mkStampSet p q
-    case s of
-      Just stampSet -> return stampSet
-      Nothing -> fail "Invalid data!" -- FIXME: improve the error message.
-
-instance Csv.ToNamedRecord StampSet where
-  toNamedRecord (StampSet p q) = Csv.namedRecord [
-    Csv.namedField "price" p,
-    Csv.namedField "quantity" q]
-
 instance Eq StampSet where
-  x == y = (abs (price x - price y) < eps)
+  x == y = (abs (price x - price y) == 0)
            && (abs (quantity x - quantity y) == 0)
 
 instance Ord StampSet where
-  compare x y = if abs (price x - price y) < eps
+  compare x y = if abs (price x - price y) == 0
                 then compare (quantity x) (quantity y)
                 else compare (price x) (price y)
 
--- | Threshold for float equality.
-eps :: Double
-eps = 1e-12
+-- | A stamp set as it should be read from a CSV file.
+data CsvStampSet = CsvStampSet Double Int
+
+instance Csv.FromNamedRecord CsvStampSet where
+  parseNamedRecord r = do
+    p <- Csv.lookup r "price"
+    q <- Csv.lookup r "quantity"
+    if (p > 0) && (q >= 0)
+      then return (CsvStampSet p q)
+      else fail "Invalid data!" -- FIXME: improve the error message.
 
 -- | Create a set of stamp.
-mkStampSet :: Double -> Int -> Maybe StampSet
+mkStampSet :: Int -> Int -> Maybe StampSet
 mkStampSet p q = if (p > 0) && (q >= 0)
   then Just (StampSet p q)
   else Nothing
 
 -- | Get the unitary price of a stamp.
-price :: StampSet -> Double
+price :: StampSet -> Int
 price (StampSet p _) = p
 
 -- | Get the available number of stamps in a set of stamps.
@@ -78,11 +71,11 @@ quantity :: StampSet -> Int
 quantity (StampSet _ q) = q
 
 -- | Get the total value of a set of stamps.
-setValue :: StampSet -> Double
-setValue (StampSet p q) = p * (fromIntegral q)
+setValue :: StampSet -> Int
+setValue (StampSet p q) = p * q
 
 -- | Get the total value of a sequence of stamps sets.
-totalValue :: Seq StampSet -> Double
+totalValue :: Seq StampSet -> Int
 totalValue = (sum . (fmap setValue))
 
 -- | Get the total number of stamps in a sequence of stamps sets.
@@ -104,21 +97,24 @@ split (StampSet p q) n = if (n <= q) && (n >= 0)
   else (StampSet p 0, StampSet p q)
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
-fromByteString :: Bool -> BL.ByteString -> Either String (Seq StampSet)
-fromByteString comma bs = case Csv.decodeByNameWith myOptions bs of
+fromByteString :: Bool -> Int -> BL.ByteString -> Either String (Seq StampSet)
+fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> Right ((fromList . V.toList) x)
+  Right (_, x) -> Right (fmap go ((fromList . V.toList) x))
   where
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
+    go :: CsvStampSet -> StampSet
+    go (CsvStampSet p q) = StampSet (round (p * 10**(fromIntegral dp))) q
+
 -- | Read a sequence of stamp sets from a CSV file.
-readInventoryFile :: Bool -> String -> IO (Either String (Seq StampSet))
-readInventoryFile comma fname = do
+readInventoryFile :: Bool -> Int -> String -> IO (Either String (Seq StampSet))
+readInventoryFile comma dp fname = do
   csvData <- BL.readFile fname
-  return (fromByteString comma csvData)
+  return (fromByteString comma dp csvData)
 
 -- | Read a sequence of stamp sets from a CSV-like string.
-readInventoryString :: Bool -> String -> Either String (Seq StampSet)
-readInventoryString comma csvData = fromByteString comma (encodeUtf8 . T.pack $ csvData)
+readInventoryString :: Bool -> Int -> String -> Either String (Seq StampSet)
+readInventoryString comma dp csvData = fromByteString comma dp (encodeUtf8 . T.pack $ csvData)

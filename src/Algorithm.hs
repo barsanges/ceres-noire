@@ -30,7 +30,7 @@ dropSupersets :: Seq Collection -> Seq Collection
 dropSupersets xs = Seq.filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
-withinRange :: Double -> Double -> Collection -> Either String (Seq Collection)
+withinRange :: Int -> Int -> Collection -> Either String (Seq Collection)
 withinRange low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
@@ -43,7 +43,7 @@ withinRange low up inventory
 -- | The function that actually search the sets of stamps whose total value lies
 -- within the given range. Do not perform any check regarding the validity of
 -- the inputs.
-solve :: Double -> Double -> Collection -> Set Collection
+solve :: Int -> Int -> Collection -> Set Collection
 solve low up inventory = go inventory (Set.singleton Empty)
   where
     go :: Collection -> Set Collection -> Set Collection
@@ -68,7 +68,7 @@ mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
 -- total value is lesser than `up`, and on the other hand the ones
 -- whose total value lies between `low` and `up`. All collections
 -- belonging to the second sequence belong also to the first one.
-sieve :: Double -> Double -> Set Collection -> (Set Collection, Set Collection)
+sieve :: Int -> Int -> Set Collection -> (Set Collection, Set Collection)
 sieve low up = foldr go (Set.empty, Set.empty)
   where
     go :: Collection
@@ -114,16 +114,24 @@ isStrictSubset' :: Collection -> Collection -> Bool
 isStrictSubset' = flip isStrictSubset
 
 -- | Turn a collection into a human readable string. The resulting string is not
--- exhaustive and should not be used for serialisation.
-reprCollection :: Collection -> String
-reprCollection xs = fmtFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
+-- exhaustive and should not be used for serialisation. The argument 'dp' is
+-- used to render the prices of the stamps as decimal values, and not integral
+-- ones.
+reprCollection :: Int -> Collection -> String
+reprCollection dp xs = fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
-    fmtFloat = showFFloat (Just 2)
+    fmtAsFloat :: Int -> ShowS
+    fmtAsFloat a = showFFloat (Just 2) a'
+      where
+        a' :: Double
+        a' = ((fromIntegral a) / (10**(fromIntegral dp)))
+
     stamps = intercalate ", " (toList (fmap go xs))
+
     go :: StampSet -> String
-    go s = (show (quantity s)) ++ "x at " ++ (fmtFloat (price s) $ " EUR")
+    go s = (show (quantity s)) ++ "x at " ++ (fmtAsFloat (price s) $ " EUR")
 
 -- | Turn a list of collections into a human readable string. See also
--- 'reprCollection.'
-reprCollections :: Seq Collection -> String
-reprCollections seqs = intercalate "\n" (toList $ fmap reprCollection seqs)
+-- 'reprCollection'.
+reprCollections :: Int -> Seq Collection -> String
+reprCollections dp seqs = intercalate "\n" (toList $ fmap (reprCollection dp) seqs)

@@ -22,13 +22,13 @@ instance Arbitrary StampSet where
   arbitrary = do
     p <- arbitrary
     q <- arbitrary
-    return (fromJust (mkStampSet (1e-9 + abs p) (abs q)))
+    return (fromJust (mkStampSet (1 + abs p) (abs q)))
 
 s1 :: StampSet
-s1 = fromJust (mkStampSet 1.1 2)
+s1 = fromJust (mkStampSet 110 2)
 
 s2 :: StampSet
-s2 = fromJust (mkStampSet 2.2 1)
+s2 = fromJust (mkStampSet 220 1)
 
 sq1 :: Seq StampSet
 sq1 = fromList [s1, s2]
@@ -50,44 +50,44 @@ spec = do
 
   describe "fromByteString, with semi-colon" $ do
     it "converts a byte string to a sequence of stamp sets" $
-      (fromByteString False "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)
+      (fromByteString False 2 "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)
 
     it "accepts a header with more columns than requested" $
-      (fromByteString False "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `shouldBe` (Right sq1)
+      (fromByteString False 2 "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `shouldBe` (Right sq1)
 
     it "fails if the header does not contain 'price' and 'quantity'" $
-      (fromByteString False "foo;bar\r\n1.1;27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
+      (fromByteString False 2 "foo;bar\r\n1.1;27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
 
     it "fails if fields are missing" $
-      (fromByteString False "price;quantity\r\n1.1;\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2;1\\r\\n\"")
+      (fromByteString False 2 "price;quantity\r\n1.1;\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2;1\\r\\n\"")
 
     it "fails if fields have the wrong type" $
-      (fromByteString False "price;quantity\r\n1.1;abc\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2;1\\r\\n\"")
+      (fromByteString False 2 "price;quantity\r\n1.1;abc\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2;1\\r\\n\"")
 
     it "fails if the string contains no data" $
-      (fromByteString False "price;quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
+      (fromByteString False 2 "price;quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
 
     it "fails if the string contains negative values" $
-      (fromByteString False "price;quantity\r\n1.1;-2\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2;1\\r\\n\"")
+      (fromByteString False 2 "price;quantity\r\n1.1;-2\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2;1\\r\\n\"")
 
   describe "fromByteString, with comma" $ do
     it "converts a byte string to a sequence of stamp sets" $
-      (fromByteString True "price,quantity\r\n1.1,2\r\n2.2,1\r\n") `shouldBe` (Right sq1)
+      (fromByteString True 2 "price,quantity\r\n1.1,2\r\n2.2,1\r\n") `shouldBe` (Right sq1)
 
     it "accepts a header with more columns than requested" $
-      (fromByteString True "price,quantity,foo\r\n1.1,2,abc\r\n2.2,1,xyz\r\n") `shouldBe` (Right sq1)
+      (fromByteString True 2 "price,quantity,foo\r\n1.1,2,abc\r\n2.2,1,xyz\r\n") `shouldBe` (Right sq1)
 
     it "fails if the header does not contain 'price' and 'quantity'" $
-      (fromByteString True "foo,bar\r\n1.1,27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
+      (fromByteString True 2 "foo,bar\r\n1.1,27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
 
     it "fails if fields are missing" $
-      (fromByteString True "price,quantity\r\n1.1,\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2,1\\r\\n\"")
+      (fromByteString True 2 "price,quantity\r\n1.1,\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2,1\\r\\n\"")
 
     it "fails if fields have the wrong type" $
-      (fromByteString True "price,quantity\r\n1.1,abc\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2,1\\r\\n\"")
+      (fromByteString True 2 "price,quantity\r\n1.1,abc\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2,1\\r\\n\"")
 
     it "fails if the string contains no data" $
-      (fromByteString True "price,quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
+      (fromByteString True 2 "price,quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
 
     it "fails if the string contains negative values" $
-      (fromByteString True "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")
+      (fromByteString True 2 "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")
