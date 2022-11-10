@@ -17,7 +17,6 @@ module StampSet (
   totalQuantity,
   mkRange,
   split,
-  simplify,
   fromByteString,
   readInventoryFile,
   readInventoryString,
@@ -26,7 +25,7 @@ module StampSet (
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
-import Data.Sequence ( Seq(..), (<|), fromList )
+import Data.Sequence ( Seq(..), fromList )
 import qualified Data.Sequence as S
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
@@ -103,17 +102,6 @@ split :: StampSet -> Int -> (StampSet, StampSet)
 split (StampSet p q) n = if (n <= q) && (n >= 0)
   then (StampSet p n, StampSet p (q - n))
   else (StampSet p 0, StampSet p q)
-
--- | Simplify a sequence of stamps sets by merging the sets of stamps which
--- have the same price.
-simplify :: Seq StampSet -> Seq StampSet
-simplify Empty = Empty
-simplify ((StampSet p q) :<| xs) = if q' > 0
-  then (StampSet p q') <| (simplify xs')
-  else simplify xs'
-  where
-    (ys, xs') = S.partition (\ y -> abs (price y - p) < 1e-12) xs
-    q' = q + totalQuantity ys
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
 fromByteString :: Bool -> BL.ByteString -> Either String (Seq StampSet)
