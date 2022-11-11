@@ -17,7 +17,7 @@ import Data.Sequence ( Seq(..), fromList )
 import qualified Data.Sequence as Seq
 
 import Algorithm
-import StampSet
+import Stamps
 
 instance Arbitrary StampSet where
   arbitrary = do

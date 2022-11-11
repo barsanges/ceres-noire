@@ -21,7 +21,7 @@ import Data.Set ( Set )
 import qualified Data.Set as Set
 import Numeric ( showFFloat )
 
-import StampSet
+import Stamps
 
 type Collection = Seq StampSet -- FIXME: find another name?
 

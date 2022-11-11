@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {- |
-   Module      : StampSetSpec
+   Module      : StampsSpec
    Copyright   : Copyright (C) 2021 barsanges
    License     : GNU GPL, version 3
 
-Test the module StampSet.
+Test the module Stamps.
 -}
 
-module StampSetSpec ( spec ) where
+module StampsSpec ( spec ) where
 
 import Test.Hspec
 import Test.QuickCheck
@@ -16,7 +16,7 @@ import Test.QuickCheck
 import Data.Maybe ( fromJust )
 import Data.Sequence ( Seq, fromList )
 
-import StampSet
+import Stamps
 
 instance Arbitrary StampSet where
   arbitrary = do

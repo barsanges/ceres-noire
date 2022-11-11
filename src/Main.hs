@@ -9,7 +9,7 @@ Parses command-line options and solves the postage cost problem.
 module Main where
 
 import Options.Applicative
-import StampSet
+import Stamps
 import Algorithm
 
 -- | Format of the inventory: CSV file or CSV-like string.

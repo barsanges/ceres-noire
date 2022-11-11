@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {- |
-   Module      : StampSet
+   Module      : Stamps
    Copyright   : Copyright (C) 2021 barsanges
    License     : GNU GPL, version 3
 
-Stamps and sequences of stamps for the postage cost problem.
+Stamps and collections of stamps.
 -}
 
-module StampSet (
+module Stamps (
   StampSet,
   mkStampSet,
   price,
