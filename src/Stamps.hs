@@ -9,6 +9,7 @@ Stamps and collections of stamps.
 
 module Stamps (
   StampSet,
+  Collection,
   mkStampSet,
   price,
   quantity,
@@ -56,6 +57,9 @@ instance Csv.FromNamedRecord CsvStampSet where
       then return (CsvStampSet p q)
       else fail "Invalid data!" -- FIXME: improve the error message.
 
+-- | A collection of stamps.
+type Collection = Seq StampSet
+
 -- | Create a set of stamp.
 mkStampSet :: Int -> Int -> Maybe StampSet
 mkStampSet p q = if (p > 0) && (q >= 0)
@@ -75,11 +79,11 @@ setValue :: StampSet -> Int
 setValue (StampSet p q) = p * q
 
 -- | Get the total value of a sequence of stamps sets.
-totalValue :: Seq StampSet -> Int
+totalValue :: Collection -> Int
 totalValue = (sum . (fmap setValue))
 
 -- | Get the total number of stamps in a sequence of stamps sets.
-totalQuantity :: Seq StampSet -> Int
+totalQuantity :: Collection -> Int
 totalQuantity = (sum . (fmap quantity))
 
 -- | Create a sequence of sets of length `1 + quantity s`. The first set
@@ -97,7 +101,7 @@ split (StampSet p q) n = if (n <= q) && (n >= 0)
   else (StampSet p 0, StampSet p q)
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
-fromByteString :: Bool -> Int -> BL.ByteString -> Either String (Seq StampSet)
+fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
   Right (_, x) -> Right (fmap go ((fromList . V.toList) x))
@@ -110,7 +114,7 @@ fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
     go (CsvStampSet p q) = StampSet (round (p * 10**(fromIntegral dp))) q
 
 -- | Read a sequence of stamp sets from a CSV file.
-readInventoryFile :: Bool -> Int -> String -> IO (Either String (Seq StampSet))
+readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)
 readInventoryFile comma dp fname = do
   csvData <- BL.readFile fname
   return (fromByteString comma dp csvData)

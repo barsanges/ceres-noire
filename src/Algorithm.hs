@@ -24,11 +24,11 @@ import Numeric ( showFFloat )
 import Stamps
 
 -- | Filter the sets that are supersets of other sets in the sequence.
-dropSupersets :: Seq (Seq StampSet) -> Seq (Seq StampSet)
+dropSupersets :: Seq Collection -> Seq Collection
 dropSupersets xs = Seq.filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
-withinRange :: Int -> Int -> Seq StampSet -> Either String (Seq (Seq StampSet))
+withinRange :: Int -> Int -> Collection -> Either String (Seq Collection)
 withinRange low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
@@ -41,10 +41,10 @@ withinRange low up inventory
 -- | The function that actually search the sets of stamps whose total value lies
 -- within the given range. Do not perform any check regarding the validity of
 -- the inputs.
-solve :: Int -> Int -> Seq StampSet -> Set (Seq StampSet)
+solve :: Int -> Int -> Collection -> Set Collection
 solve low up inventory = go inventory (Set.singleton Empty)
   where
-    go :: Seq StampSet -> Set (Seq StampSet) -> Set (Seq StampSet)
+    go :: Collection -> Set Collection -> Set Collection
     go Empty _ = Set.empty
     go (s :<| ss) partial = Set.union complete complete'
       where
@@ -54,7 +54,7 @@ solve low up inventory = go inventory (Set.singleton Empty)
 
 -- | Create all collections resulting from the union of `col` and the
 -- elements of `mkRange s`.
-mkCollectionRange :: StampSet -> Seq StampSet -> Set (Seq StampSet)
+mkCollectionRange :: StampSet -> Collection -> Set Collection
 mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
   where
     go :: StampSet -> Seq StampSet
@@ -66,12 +66,12 @@ mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
 -- total value is lesser than `up`, and on the other hand the ones
 -- whose total value lies between `low` and `up`. All collections
 -- belonging to the second sequence belong also to the first one.
-sieve :: Int -> Int -> Set (Seq StampSet) -> (Set (Seq StampSet), Set (Seq StampSet))
+sieve :: Int -> Int -> Set Collection -> (Set Collection, Set Collection)
 sieve low up = foldr go (Set.empty, Set.empty)
   where
     go :: Seq StampSet
-       -> (Set (Seq StampSet), Set (Seq StampSet))
-       -> (Set (Seq StampSet), Set (Seq StampSet))
+       -> (Set Collection, Set Collection)
+       -> (Set Collection, Set Collection)
     go xs (tmp, res)
       | totalValue xs > up = (tmp, res)
       | totalValue xs < low = (Set.insert xs tmp, res)
@@ -92,11 +92,11 @@ comp xs ys
     qty = compare (totalQuantity xs) (totalQuantity ys)
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
-noStrictSubset :: Seq (Seq StampSet) -> Seq StampSet -> Bool
+noStrictSubset :: Seq Collection -> Collection -> Bool
 noStrictSubset ss s = not (any (isStrictSubset' s) ss)
 
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
-isStrictSubset :: Seq StampSet -> Seq StampSet -> Bool
+isStrictSubset :: Collection -> Collection -> Bool
 isStrictSubset s s' = (all go s) && (totalQuantity s < totalQuantity s')
   where
     go :: StampSet -> Bool
@@ -108,14 +108,14 @@ isStrictSubset s s' = (all go s) && (totalQuantity s < totalQuantity s')
 -- | Same as `isStrictSubset`, but with the arguments reversed:
 -- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
 -- `s'`.
-isStrictSubset' :: Seq StampSet -> Seq StampSet -> Bool
+isStrictSubset' :: Collection -> Collection -> Bool
 isStrictSubset' = flip isStrictSubset
 
 -- | Turn a collection into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation. The argument 'dp' is
 -- used to render the prices of the stamps as decimal values, and not integral
 -- ones.
-reprCollection :: Int -> Seq StampSet -> String
+reprCollection :: Int -> Collection -> String
 reprCollection dp xs = fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
     fmtAsFloat :: Int -> ShowS
@@ -131,5 +131,5 @@ reprCollection dp xs = fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
 
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.
-reprCollections :: Int -> Seq (Seq StampSet) -> String
+reprCollections :: Int -> Seq Collection -> String
 reprCollections dp seqs = intercalate "\n" (toList $ fmap (reprCollection dp) seqs)
