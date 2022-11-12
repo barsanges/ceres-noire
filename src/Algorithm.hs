@@ -19,7 +19,6 @@ import Data.Sequence ( Seq(..), (<|) )
 import qualified Data.Sequence as Seq
 import Data.Set ( Set )
 import qualified Data.Set as Set
-import Numeric ( showFFloat )
 
 import Stamps
 
@@ -90,44 +89,6 @@ comp xs ys
   where
     val = compare (totalValue xs) (totalValue ys)
     qty = compare (totalQuantity xs) (totalQuantity ys)
-
--- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
-noStrictSubset :: Seq Collection -> Collection -> Bool
-noStrictSubset ss s = not (any (isStrictSubset' s) ss)
-
--- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
-isStrictSubset :: Collection -> Collection -> Bool
-isStrictSubset s s' = (all go s) && (totalQuantity s < totalQuantity s')
-  where
-    go :: StampSet -> Bool
-    go x = any og s'
-      where
-        og :: StampSet -> Bool
-        og y = (price x == price y) && (quantity x <= quantity y)
-
--- | Same as `isStrictSubset`, but with the arguments reversed:
--- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
--- `s'`.
-isStrictSubset' :: Collection -> Collection -> Bool
-isStrictSubset' = flip isStrictSubset
-
--- | Turn a collection into a human readable string. The resulting string is not
--- exhaustive and should not be used for serialisation. The argument 'dp' is
--- used to render the prices of the stamps as decimal values, and not integral
--- ones.
-reprCollection :: Int -> Collection -> String
-reprCollection dp xs = fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
-  where
-    fmtAsFloat :: Int -> ShowS
-    fmtAsFloat a = showFFloat (Just 2) a'
-      where
-        a' :: Double
-        a' = ((fromIntegral a) / (10**(fromIntegral dp)))
-
-    stamps = intercalate ", " (toList (fmap go xs))
-
-    go :: StampSet -> String
-    go s = (show (quantity s)) ++ "x at " ++ (fmtAsFloat (price s) $ " EUR")
 
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.

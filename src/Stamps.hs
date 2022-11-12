@@ -18,6 +18,8 @@ module Stamps (
   totalQuantity,
   mkRange,
   split,
+  noStrictSubset,
+  reprCollection,
   fromByteString,
   readInventoryFile,
   readInventoryString,
@@ -26,11 +28,14 @@ module Stamps (
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
+import Data.Foldable ( toList )
+import Data.List ( intercalate )
 import Data.Sequence ( Seq(..), fromList )
 import qualified Data.Sequence as S
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
+import Numeric ( showFFloat )
 
 -- | A set of similar stamps is defined by the unitary price of the stamp, and
 -- the quantity of stamps in the set.
@@ -99,6 +104,44 @@ split :: StampSet -> Int -> (StampSet, StampSet)
 split (StampSet p q) n = if (n <= q) && (n >= 0)
   then (StampSet p n, StampSet p (q - n))
   else (StampSet p 0, StampSet p q)
+
+-- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
+noStrictSubset :: Seq Collection -> Collection -> Bool
+noStrictSubset ss s = not (any (isStrictSubset' s) ss)
+
+-- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
+isStrictSubset :: Collection -> Collection -> Bool
+isStrictSubset s s' = (all go s) && (totalQuantity s < totalQuantity s')
+  where
+    go :: StampSet -> Bool
+    go x = any og s'
+      where
+        og :: StampSet -> Bool
+        og y = (price x == price y) && (quantity x <= quantity y)
+
+-- | Same as `isStrictSubset`, but with the arguments reversed:
+-- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
+-- `s'`.
+isStrictSubset' :: Collection -> Collection -> Bool
+isStrictSubset' = flip isStrictSubset
+
+-- | Turn a collection into a human readable string. The resulting string is not
+-- exhaustive and should not be used for serialisation. The argument 'dp' is
+-- used to render the prices of the stamps as decimal values, and not integral
+-- ones.
+reprCollection :: Int -> Collection -> String
+reprCollection dp xs = fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
+  where
+    fmtAsFloat :: Int -> ShowS
+    fmtAsFloat a = showFFloat (Just 2) a'
+      where
+        a' :: Double
+        a' = ((fromIntegral a) / (10**(fromIntegral dp)))
+
+    stamps = intercalate ", " (toList (fmap go xs))
+
+    go :: StampSet -> String
+    go s = (show (quantity s)) ++ "x at " ++ (fmtAsFloat (price s) $ " EUR")
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
