@@ -13,7 +13,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.Maybe ( fromJust )
-import Data.Sequence ( Seq(..), fromList )
+import Data.Sequence ( Seq(..) )
 import qualified Data.Sequence as Seq
 
 import Algorithm
@@ -25,50 +25,53 @@ instance Arbitrary StampSet where
     q <- arbitrary
     return (fromJust (mkStampSet (1 + abs p) (abs q)))
 
-sq1 :: Seq StampSet
+instance Arbitrary Collection where
+  arbitrary = fmap fromList (listOf arbitrary)
+
+sq1 :: Collection
 sq1 = fromList [ fromJust (mkStampSet 108 3)
                , fromJust (mkStampSet 143 2)
                , fromJust (mkStampSet 286 1)
                ]
 
-sq2 :: Seq StampSet
+sq2 :: Collection
 sq2 = fromList [ fromJust (mkStampSet 128 6)
                , fromJust (mkStampSet 232 2)
                , fromJust (mkStampSet 256 2)
                ]
 
-sol1 :: Seq (Seq StampSet)
-sol1 = fromList [ fromList [fromJust (mkStampSet 286 1)]
-                , fromList [fromJust (mkStampSet 143 2)]
-                ]
+sol1 :: Seq Collection
+sol1 = Seq.fromList [ fromList [fromJust (mkStampSet 286 1)]
+                    , fromList [fromJust (mkStampSet 143 2)]
+                    ]
 
-sol2 :: Seq (Seq StampSet)
-sol2 = fromList [ fromList [fromJust (mkStampSet 232 1)] ]
+sol2 :: Seq Collection
+sol2 = Seq.fromList [ fromList [fromJust (mkStampSet 232 1)] ]
 
-sol3 :: Seq (Seq StampSet)
-sol3 = fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 1)]
-                , fromList [fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 3)]
-                , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 1)]
-                , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 3)]
-                , fromList [fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 5)]
-                , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 3)]
-                , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 5)]
-                , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 2)]
-                , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 2)]
-                , fromList [fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 4)]
-                , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 2)]
-                , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 4)]
-                , fromList [fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 6)]
-                ]
+sol3 :: Seq Collection
+sol3 = Seq.fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 1)]
+                    , fromList [fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 3)]
+                    , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 1)]
+                    , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 3)]
+                    , fromList [fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 5)]
+                    , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 3)]
+                    , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 5)]
+                    , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 2)]
+                    , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 2)]
+                    , fromList [fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 4)]
+                    , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 2)]
+                    , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 4)]
+                    , fromList [fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 6)]
+                    ]
 
-probGen :: Int -> Gen (Int, Int, Seq StampSet)
+probGen :: Int -> Gen (Int, Int, Collection)
 probGen n = do
   x <- arbitrary
   y <- arbitrary
   z <- resize n (fmap fromList (listOf arbitrary))
   return (x, y, z)
 
-propTotalCost :: (Int, Int, Seq StampSet) -> Property
+propTotalCost :: (Int, Int, Collection) -> Property
 propTotalCost (x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
     x' = 1 + abs x
@@ -81,44 +84,44 @@ propTotalCost (x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
       Left _ -> False -- Never happens in practice.
       Right zs -> all (\ z -> (totalValue z) >= x' && (totalValue z) <= y') zs
 
-multiple1 :: Seq (Seq StampSet)
-multiple1 = fromList [ fromList [fromJust (mkStampSet 128 1)]
-                     , fromList [fromJust (mkStampSet 128 2)]
-                     ]
+multiple1 :: Seq Collection
+multiple1 = Seq.fromList [ fromList [fromJust (mkStampSet 128 1)]
+                         , fromList [fromJust (mkStampSet 128 2)]
+                         ]
 
-simplified1 :: Seq (Seq StampSet)
-simplified1 = fromList [ fromList [fromJust (mkStampSet 128 1)]
-                       ]
+simplified1 :: Seq Collection
+simplified1 = Seq.fromList [ fromList [fromJust (mkStampSet 128 1)]
+                           ]
 
-multiple2 :: Seq (Seq StampSet)
-multiple2 = fromList [ fromList [fromJust (mkStampSet 128 1)]
-                     , fromList [fromJust (mkStampSet 128 1), fromJust (mkStampSet 010 1)]
-                     ]
+multiple2 :: Seq Collection
+multiple2 = Seq.fromList [ fromList [fromJust (mkStampSet 128 1)]
+                         , fromList [fromJust (mkStampSet 128 1), fromJust (mkStampSet 010 1)]
+                         ]
 
-simplified2 :: Seq (Seq StampSet)
-simplified2 = fromList [ fromList [fromJust (mkStampSet 128 1)]
-                       ]
+simplified2 :: Seq Collection
+simplified2 = Seq.fromList [ fromList [fromJust (mkStampSet 128 1)]
+                           ]
 
-multiple3 :: Seq (Seq StampSet)
-multiple3 = fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 3)]
-                     , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 1)]
-                     ]
+multiple3 :: Seq Collection
+multiple3 = Seq.fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 3)]
+                         , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 1)]
+                         ]
 
-simplified3 :: Seq (Seq StampSet)
-simplified3 = fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 3)]
-                       , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 1)]
-                       ]
+simplified3 :: Seq Collection
+simplified3 = Seq.fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 3)]
+                           , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 1)]
+                           ]
 
-simplified4 :: Seq (Seq StampSet)
-simplified4 = fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 1)]
-                       , fromList [fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 3)]
-                       , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 1)]
-                       , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 3)]
-                       , fromList [fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 5)]
-                       , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 3)]
-                       , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 5)]
-                       , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 2)]
-                       ]
+simplified4 :: Seq Collection
+simplified4 = Seq.fromList [ fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 1)]
+                           , fromList [fromJust (mkStampSet 232 2), fromJust (mkStampSet 128 3)]
+                           , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 1)]
+                           , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 3)]
+                           , fromList [fromJust (mkStampSet 232 1), fromJust (mkStampSet 128 5)]
+                           , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 128 3)]
+                           , fromList [fromJust (mkStampSet 256 1), fromJust (mkStampSet 128 5)]
+                           , fromList [fromJust (mkStampSet 256 2), fromJust (mkStampSet 232 2)]
+                           ]
 
 spec :: Spec
 spec = do
@@ -136,13 +139,13 @@ spec = do
       (withinRange 1100 1100 sq1) `shouldBe` (Left "The problem is infeasible!")
 
     it "should always fail if the inventory is empty" $ property $
-      \ x -> ((withinRange (abs x) (1 + abs x) Empty) `shouldBe` (Left "The problem is infeasible!"))
+      \ x -> ((withinRange (abs x) (1 + abs x) empty) `shouldBe` (Left "The problem is infeasible!"))
 
     it "should always fail if the minimum value is negative" $ property $
-      \ x -> ((withinRange (-(abs x) - 1) (abs x) Empty) `shouldBe` (Left "The minimum value should be a positive float!"))
+      \ x -> ((withinRange (-(abs x) - 1) (abs x) empty) `shouldBe` (Left "The minimum value should be a positive float!"))
 
     it "should always fail if the maximum value is lower than the minimum value" $ property $
-      \ x -> ((withinRange ((abs x) + 10) ((abs x) + 5) Empty) `shouldBe` (Left "The maximum value should be greater than the minimum value!"))
+      \ x -> ((withinRange ((abs x) + 10) ((abs x) + 5) empty) `shouldBe` (Left "The maximum value should be greater than the minimum value!"))
 
     it "should always give solutions (if they exists) with a cost greater or equal to the cost of the letter" $ property $
       forAll (probGen 5) propTotalCost
@@ -167,4 +170,4 @@ spec = do
       \ xs -> ((length $ dropSupersets xs) <= (length xs))
 
     it "should leave singletons untouched" $ property $
-      \ x -> ((dropSupersets $ Seq.singleton $ Seq.singleton x) == (Seq.singleton $ Seq.singleton x))
+      \ x -> ((dropSupersets $ Seq.singleton $ fromList [x]) == (Seq.singleton $ fromList [x]))

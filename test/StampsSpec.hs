@@ -14,7 +14,6 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.Maybe ( fromJust )
-import Data.Sequence ( Seq, fromList )
 
 import Stamps
 
@@ -30,7 +29,7 @@ s1 = fromJust (mkStampSet 110 2)
 s2 :: StampSet
 s2 = fromJust (mkStampSet 220 1)
 
-sq1 :: Seq StampSet
+sq1 :: Collection
 sq1 = fromList [s1, s2]
 
 stampSetEq :: StampSet -> Bool

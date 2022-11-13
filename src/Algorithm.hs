@@ -15,7 +15,7 @@ module Algorithm (
 
 import Data.Foldable ( toList )
 import Data.List ( intercalate )
-import Data.Sequence ( Seq(..), (<|) )
+import Data.Sequence ( Seq(..) )
 import qualified Data.Sequence as Seq
 import Data.Set ( Set )
 import qualified Data.Set as Set
@@ -41,24 +41,26 @@ withinRange low up inventory
 -- within the given range. Do not perform any check regarding the validity of
 -- the inputs.
 solve :: Int -> Int -> Collection -> Set Collection
-solve low up inventory = go inventory (Set.singleton Empty)
+solve low up inventory = res
   where
-    go :: Collection -> Set Collection -> Set Collection
-    go Empty _ = Set.empty
-    go (s :<| ss) partial = Set.union complete complete'
+    (_, res) = crease go (Set.singleton empty, Set.empty) inventory
+
+    go :: StampSet
+       -> (Set Collection, Set Collection)
+       -> (Set Collection, Set Collection)
+    go s (partial, complete) = (partial', Set.union complete complete')
       where
         cols = Set.unions (Set.map (mkCollectionRange s) partial)
-        (partial', complete) = sieve low up cols
-        complete' = go ss partial'
+        (partial', complete') = sieve low up cols
 
 -- | Create all collections resulting from the union of `col` and the
 -- elements of `mkRange s`.
 mkCollectionRange :: StampSet -> Collection -> Set Collection
 mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
   where
-    go :: StampSet -> Seq StampSet
+    go :: StampSet -> Collection
     go s' = if quantity s' > 0
-            then s' <| col
+            then add s' col
             else col
 
 -- | Sort the given collections, and return on one hand the ones whose
@@ -68,27 +70,13 @@ mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
 sieve :: Int -> Int -> Set Collection -> (Set Collection, Set Collection)
 sieve low up = foldr go (Set.empty, Set.empty)
   where
-    go :: Seq StampSet
+    go :: Collection
        -> (Set Collection, Set Collection)
        -> (Set Collection, Set Collection)
     go xs (tmp, res)
       | totalValue xs > up = (tmp, res)
       | totalValue xs < low = (Set.insert xs tmp, res)
       | otherwise = (Set.insert xs tmp, Set.insert xs res)
-
--- | Compare two collections: a collection is "smaller" than the other
--- if it is less costly or, if they have the same value, if it
--- contains less stamps. If they have the same cost and contain the
--- same number of stamps, they are considered equal (even if they do
--- not contain the same stamps!).
-comp :: Seq StampSet -> Seq StampSet -> Ordering
-comp xs ys
-  | val == LT = LT
-  | val == EQ = qty
-  | otherwise = GT
-  where
-    val = compare (totalValue xs) (totalValue ys)
-    qty = compare (totalQuantity xs) (totalQuantity ys)
 
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.
