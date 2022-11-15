@@ -33,9 +33,10 @@ module Stamps (
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
-import Data.Foldable ( toList )
 import Data.List ( intercalate )
-import Data.Sequence ( Seq(..), (<|) )
+import Data.IntMap ( IntMap )
+import qualified Data.IntMap as M
+import Data.Sequence ( Seq(..) )
 import qualified Data.Sequence as S
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
@@ -68,7 +69,7 @@ instance Csv.FromNamedRecord CsvStampSet where
       else fail "Invalid data!" -- FIXME: improve the error message.
 
 -- | A collection of stamps.
-newtype Collection = Col (Seq StampSet)
+newtype Collection = Col { content :: IntMap Int }
   deriving (Eq, Ord, Show)
 
 -- | Create a set of stamp.
@@ -79,11 +80,13 @@ mkStampSet p q = if (p > 0) && (q >= 0)
 
 -- | An empty collection of stamps.
 empty :: Collection
-empty = Col Empty
+empty = Col { content = M.empty }
 
 -- | Add a set to a collection.
 add :: StampSet -> Collection -> Collection
-add s (Col xs) = Col (s <| xs)
+add (StampSet p q) xs = if (p > 0) && (q > 0)
+                        then xs { content = M.insertWith (+) p q (content xs) }
+                        else xs
 
 -- | Turn a list of stamp sets into a collection.
 fromList :: [StampSet] -> Collection
@@ -91,7 +94,9 @@ fromList xs = foldr add empty xs
 
 -- | A `fold` for collections.
 crease :: (StampSet -> b -> b) -> b -> Collection -> b
-crease f y0 (Col xs) = foldr f y0 xs
+crease f y0 xs = M.foldrWithKey go y0 (content xs)
+  where
+    go p q y = f (StampSet p q) y
 
 -- | Get the unitary price of a stamp.
 price :: StampSet -> Int
@@ -107,11 +112,11 @@ setValue (StampSet p q) = p * q
 
 -- | Get the total value of a sequence of stamps sets.
 totalValue :: Collection -> Int
-totalValue (Col xs) = (sum . (fmap setValue)) xs
+totalValue xs = (sum . (fmap (\ (p, q) -> p * q)) . M.toList . content) xs
 
 -- | Get the total number of stamps in a sequence of stamps sets.
 totalQuantity :: Collection -> Int
-totalQuantity (Col xs) = (sum . (fmap quantity)) xs
+totalQuantity xs = (sum . M.elems . content) xs
 
 -- | Create a sequence of sets of length `1 + quantity s`. The first set
 -- contains zero stamp, the second one, etc, and the last one `quantity s`.
@@ -133,14 +138,14 @@ noStrictSubset ss s = not (any (isStrictSubset' s) ss)
 
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
 isStrictSubset :: Collection -> Collection -> Bool
-isStrictSubset (Col s) (Col s') =
-  (all go s) && (totalQuantity (Col s) < totalQuantity (Col s'))
+isStrictSubset s s' =
+  (all go (M.toList . content $ s)) && (totalQuantity s < totalQuantity s')
   where
-    go :: StampSet -> Bool
-    go x = any og s'
+    go :: (Int, Int) -> Bool
+    go (p, q) = any og (M.toList . content $ s')
       where
-        og :: StampSet -> Bool
-        og y = (price x == price y) && (quantity x <= quantity y)
+        og :: (Int, Int) -> Bool
+        og (p', q') = (p == p') && (q <= q')
 
 -- | Same as `isStrictSubset`, but with the arguments reversed:
 -- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
@@ -167,8 +172,8 @@ comp xs ys
 -- used to render the prices of the stamps as decimal values, and not integral
 -- ones.
 reprCollection :: Int -> Collection -> String
-reprCollection dp (Col xs) =
-  fmtAsFloat (totalValue (Col xs)) $ " EUR (" ++ stamps ++ ")"
+reprCollection dp xs =
+  fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
     fmtAsFloat :: Int -> ShowS
     fmtAsFloat a = showFFloat (Just 2) a'
@@ -176,23 +181,23 @@ reprCollection dp (Col xs) =
         a' :: Double
         a' = ((fromIntegral a) / (10**(fromIntegral dp)))
 
-    stamps = intercalate ", " (toList (fmap go xs))
+    stamps = intercalate ", " (fmap go (M.toList . content $ xs))
 
-    go :: StampSet -> String
-    go s = (show (quantity s)) ++ "x at " ++ (fmtAsFloat (price s) $ " EUR")
+    go :: (Int, Int) -> String
+    go (p, q) = (show q) ++ "x at " ++ (fmtAsFloat p $ " EUR")
 
 -- | Read a sequence of stamp sets from a CSV-like bytestring.
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> Right (Col (fmap go ((S.fromList . V.toList) x)))
+  Right (_, x) -> Right (Col { content = M.fromList (fmap go (V.toList x)) })
   where
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
-    go :: CsvStampSet -> StampSet
-    go (CsvStampSet p q) = StampSet (round (p * 10**(fromIntegral dp))) q
+    go :: CsvStampSet -> (Int, Int)
+    go (CsvStampSet p q) = (round (p * 10**(fromIntegral dp)), q)
 
 -- | Read a sequence of stamp sets from a CSV file.
 readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)
