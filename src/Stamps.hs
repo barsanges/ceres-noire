@@ -110,11 +110,11 @@ quantity (StampSet _ q) = q
 setValue :: StampSet -> Int
 setValue (StampSet p q) = p * q
 
--- | Get the total value of a sequence of stamps sets.
+-- | Get the total value of a collection of stamps.
 totalValue :: Collection -> Int
 totalValue xs = (sum . (fmap (\ (p, q) -> p * q)) . M.toList . content) xs
 
--- | Get the total number of stamps in a sequence of stamps sets.
+-- | Get the total number of stamps in a collection of stamps.
 totalQuantity :: Collection -> Int
 totalQuantity xs = (sum . M.elems . content) xs
 
@@ -186,7 +186,7 @@ reprCollection dp xs =
     go :: (Int, Int) -> String
     go (p, q) = (show q) ++ "x at " ++ (fmtAsFloat p $ " EUR")
 
--- | Read a sequence of stamp sets from a CSV-like bytestring.
+-- | Read a collection of stamps from a CSV-like bytestring.
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
@@ -199,12 +199,12 @@ fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
     go :: CsvStampSet -> (Int, Int)
     go (CsvStampSet p q) = (round (p * 10**(fromIntegral dp)), q)
 
--- | Read a sequence of stamp sets from a CSV file.
+-- | Read a collection of stamps from a CSV file.
 readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)
 readInventoryFile comma dp fname = do
   csvData <- BL.readFile fname
   return (fromByteString comma dp csvData)
 
--- | Read a sequence of stamp sets from a CSV-like string.
+-- | Read a collection of stamps from a CSV-like string.
 readInventoryString :: Bool -> Int -> String -> Either String Collection
 readInventoryString comma dp csvData = fromByteString comma dp (encodeUtf8 . T.pack $ csvData)
