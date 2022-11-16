@@ -170,7 +170,7 @@ reprCollection dp xs =
         a' :: Double
         a' = ((fromIntegral a) / (10**(fromIntegral dp)))
 
-    stamps = intercalate ", " (fmap go (M.toList . content $ xs))
+    stamps = intercalate ", " (fmap go (M.toDescList . content $ xs))
 
     go :: (Int, Int) -> String
     go (p, q) = (show q) ++ "x at " ++ (fmtAsFloat p $ " EUR")
