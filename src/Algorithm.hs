@@ -56,7 +56,7 @@ solve low up inventory = res
 -- | Create all collections resulting from the union of `col` and the
 -- elements of `mkRange s`.
 mkCollectionRange :: StampSet -> Collection -> Set Collection
-mkCollectionRange s col = Set.map go (Set.fromList . toList $ mkRange s)
+mkCollectionRange s col = Set.map go (Set.fromList (mkRange s))
   where
     go :: StampSet -> Collection
     go s' = if quantity s' > 0

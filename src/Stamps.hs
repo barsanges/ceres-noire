@@ -36,7 +36,6 @@ import Data.List ( intercalate )
 import Data.IntMap ( IntMap )
 import qualified Data.IntMap as M
 import Data.Sequence ( Seq(..) )
-import qualified Data.Sequence as S
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
@@ -117,10 +116,10 @@ totalValue xs = (sum . (fmap (\ (p, q) -> p * q)) . M.toList . content) xs
 totalQuantity :: Collection -> Int
 totalQuantity xs = (sum . M.elems . content) xs
 
--- | Create a sequence of sets of length `1 + quantity s`. The first set
+-- | Create a list of sets of length `1 + quantity s`. The first set
 -- contains zero stamp, the second one, etc, and the last one `quantity s`.
-mkRange :: StampSet -> Seq StampSet
-mkRange (StampSet p q) = S.fromList [ StampSet p i | i <- [0..q] ]
+mkRange :: StampSet -> [StampSet]
+mkRange (StampSet p q) = [ StampSet p i | i <- [0..q] ]
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
 noStrictSubset :: Seq Collection -> Collection -> Bool
