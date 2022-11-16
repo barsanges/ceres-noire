@@ -17,7 +17,6 @@ module Stamps (
   totalValue,
   totalQuantity,
   mkRange,
-  split,
   empty,
   add,
   fromList,
@@ -122,15 +121,6 @@ totalQuantity xs = (sum . M.elems . content) xs
 -- contains zero stamp, the second one, etc, and the last one `quantity s`.
 mkRange :: StampSet -> Seq StampSet
 mkRange (StampSet p q) = S.fromList [ StampSet p i | i <- [0..q] ]
-
--- | Split a set of stamps in two different parts, one with 'n' pieces and the
--- other with the rest. If the operation is not feasible ('n < 0' or 'n' is
--- larger than the number of stamps available), the first set of the pair is
--- empty.
-split :: StampSet -> Int -> (StampSet, StampSet)
-split (StampSet p q) n = if (n <= q) && (n >= 0)
-  then (StampSet p n, StampSet p (q - n))
-  else (StampSet p 0, StampSet p q)
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
 noStrictSubset :: Seq Collection -> Collection -> Bool
