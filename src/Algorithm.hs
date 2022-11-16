@@ -59,9 +59,7 @@ mkCollectionRange :: StampSet -> Collection -> Set Collection
 mkCollectionRange s col = Set.map go (Set.fromList (mkRange s))
   where
     go :: StampSet -> Collection
-    go s' = if quantity s' > 0
-            then add s' col
-            else col
+    go s' = add s' col
 
 -- | Sort the given collections, and return on one hand the ones whose
 -- total value is lesser than `up`, and on the other hand the ones
