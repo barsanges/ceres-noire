@@ -22,7 +22,6 @@ module Stamps (
   fromList,
   crease,
   noStrictSubset,
-  comp,
   reprCollection,
   fromByteString,
   readInventoryFile,
@@ -68,7 +67,31 @@ instance Csv.FromNamedRecord CsvStampSet where
 
 -- | A collection of stamps.
 newtype Collection = Col { content :: IntMap Int }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Show)
+
+instance Ord Collection where
+  compare xs ys
+    | xs == ys = EQ
+    | val == LT = LT
+    | val == GT = GT
+    | otherwise = if qty == EQ
+                  then go (M.toDescList (content xs)) (content ys)
+                  else qty
+    where
+      val = compare (totalValue xs) (totalValue ys)
+      qty = compare (totalQuantity xs) (totalQuantity ys)
+
+      go :: [(Int, Int)] -> IntMap Int -> Ordering
+      go [] _ = EQ
+      go ((k, v):as) bs = if M.null bs''
+                          then case mw of
+                                 Nothing -> LT
+                                 Just w -> if v == w
+                                           then go as bs'
+                                           else compare v w
+                          else GT
+        where
+          (bs', mw, bs'') = M.splitLookup k bs
 
 -- | Create a set of stamp.
 mkStampSet :: Int -> Int -> Maybe StampSet
@@ -141,20 +164,6 @@ isStrictSubset s s' =
 -- `s'`.
 isStrictSubset' :: Collection -> Collection -> Bool
 isStrictSubset' = flip isStrictSubset
-
--- | Compare two collections: a collection is "smaller" than the other
--- if it is less costly or, if they have the same value, if it
--- contains less stamps. If they have the same cost and contain the
--- same number of stamps, they are considered equal (even if they do
--- not contain the same stamps!).
-comp :: Collection -> Collection -> Ordering
-comp xs ys
-  | val == LT = LT
-  | val == EQ = qty
-  | otherwise = GT
-  where
-    val = compare (totalValue xs) (totalValue ys)
-    qty = compare (totalQuantity xs) (totalQuantity ys)
 
 -- | Turn a collection into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation. The argument 'dp' is

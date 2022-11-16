@@ -33,7 +33,7 @@ withinRange low up inventory
   | up < low = Left "The maximum value should be greater than the minimum value!"
   | otherwise = if Set.null res
                 then Left "The problem is infeasible!"
-                else Right (Seq.sortBy comp (Seq.fromList . toList $ res))
+                else Right (Seq.sort (Seq.fromList . toList $ res))
     where
       res = solve low up inventory
 

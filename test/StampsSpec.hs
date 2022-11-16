@@ -32,6 +32,16 @@ s2 = fromJust (mkStampSet 220 1)
 sq1 :: Collection
 sq1 = fromList [s1, s2]
 
+sq2 :: Collection
+sq2 = fromList [ fromJust (mkStampSet 100 2)
+               , fromJust (mkStampSet 300 1)
+               ]
+
+sq3 :: Collection
+sq3 = fromList [ fromJust (mkStampSet 100 1)
+               , fromJust (mkStampSet 200 2)
+               ]
+
 stampSetEq :: StampSet -> Bool
 stampSetEq x = x == x
 
@@ -46,6 +56,25 @@ spec = do
 
     it "a stamp set is always equal to itself" $ property $
       stampSetEq
+
+  describe "Collection" $ do
+    it "is an instance of Eq (1)" $
+      sq1 `shouldBe` sq1
+
+    it "is an instance of Eq (2)" $
+      sq1 `shouldNotBe` sq2
+
+    it "is an instance of Ord (1)" $
+      (compare sq1 sq1) `shouldBe` EQ
+
+    it "is an instance of Ord (2)" $
+      (compare sq1 sq2) `shouldBe` LT
+
+    it "is an instance of Ord (3)" $
+      (compare sq2 sq1) `shouldBe` GT
+
+    it "is an instance of Ord (4)" $
+      (compare sq2 sq3) `shouldBe` LT
 
   describe "fromByteString, with semi-colon" $ do
     it "converts a byte string to a sequence of stamp sets" $
