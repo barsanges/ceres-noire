@@ -69,13 +69,11 @@ main :: IO ()
 main = do
   cli <- execParser args
   let dp = decimalPlaces cli
-  let low' = round ((low cli) * (10**(fromIntegral dp)))
-  let up' = round ((up cli) * (10**(fromIntegral dp)))
   maybeInventory <- case input cli of
       Fin fin -> readInventoryFile (comma cli) dp fin
       Str s -> pure (readInventoryString (comma cli) dp s)
   case maybeInventory of
     Left err -> putStrLn err
-    Right inventory -> case withinRange low' up' inventory of
+    Right inventory -> case withinRange (low cli) (up cli) inventory of
       Left msg -> putStrLn msg
       Right res -> putStrLn (reprCollections (dropSupersets res))

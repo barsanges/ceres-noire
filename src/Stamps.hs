@@ -132,7 +132,7 @@ add s xs = if (decimalPlaces_ s) /= (decimalPlaces xs)
                 then xs { content = M.insertWith (+) p q (content xs) }
                 else xs
   where
-    p = price s
+    p = price_ s
     q = quantity s
 
 -- | Turn a list of stamp sets into a collection.
@@ -150,21 +150,27 @@ crease f y0 xs = M.foldrWithKey go y0 (content xs)
                      , decimalPlaces_ = decimalPlaces xs
                      }
 
+-- | Convert an int to a double with a given decimal precision.
+toDouble :: Int -> Int -> Double
+toDouble dp n = (fromIntegral n) / (10**(fromIntegral dp))
+
 -- | Get the unitary price of a stamp.
-price :: StampSet -> Int
-price s = price_ s
+price :: StampSet -> Double
+price s = toDouble (decimalPlaces_ s) (price_ s)
 
 -- | Get the available number of stamps in a set of stamps.
 quantity :: StampSet -> Int
 quantity s = quantity_ s
 
 -- | Get the total value of a set of stamps.
-setValue :: StampSet -> Int
-setValue s = (price s) * (quantity s)
+setValue :: StampSet -> Double
+setValue s = toDouble (decimalPlaces_ s) ((price_ s) * (quantity_ s))
 
 -- | Get the total value of a collection of stamps.
-totalValue :: Collection -> Int
-totalValue xs = (sum . (fmap (\ (p, q) -> p * q)) . M.toList . content) xs
+totalValue :: Collection -> Double
+totalValue xs = toDouble (decimalPlaces xs) total
+  where
+    total = (sum . (fmap (\ (p, q) -> p * q)) . M.toList . content) xs
 
 -- | Get the total number of stamps in a collection of stamps.
 totalQuantity :: Collection -> Int
@@ -173,7 +179,7 @@ totalQuantity xs = (sum . M.elems . content) xs
 -- | Create a list of sets of length `1 + quantity s`. The first set
 -- contains zero stamp, the second one, etc, and the last one `quantity s`.
 mkRange :: StampSet -> [StampSet]
-mkRange s = [ StampSet { price_ = price s
+mkRange s = [ StampSet { price_ = price_ s
                        , quantity_ = i
                        , decimalPlaces_ = decimalPlaces_ s
                        }
@@ -207,13 +213,12 @@ isStrictSubset' = flip isStrictSubset
 -- ones.
 reprCollection :: Collection -> String
 reprCollection xs =
-  fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
+  showFFloat (Just dp) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
+    dp = decimalPlaces xs
+
     fmtAsFloat :: Int -> ShowS
-    fmtAsFloat a = showFFloat (Just 2) a'
-      where
-        a' :: Double
-        a' = (fromIntegral a) / (10**(fromIntegral (decimalPlaces xs)))
+    fmtAsFloat a = showFFloat (Just dp) (toDouble dp a)
 
     stamps = intercalate ", " (fmap go (M.toDescList . content $ xs))
 

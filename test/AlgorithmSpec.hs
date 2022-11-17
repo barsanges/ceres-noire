@@ -64,18 +64,18 @@ sol3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkSta
                     , fromList 2 [fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 6)]
                     ]
 
-probGen :: Int -> Gen (Int, Int, Collection)
+probGen :: Int -> Gen (Double, Double, Collection)
 probGen n = do
   x <- arbitrary
   y <- arbitrary
   z <- resize n (fmap (fromList 0) (listOf arbitrary))
   return (x, y, z)
 
-propTotalCost :: (Int, Int, Collection) -> Property
+propTotalCost :: (Double, Double, Collection) -> Property
 propTotalCost (x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
-    x' = 1 + abs x
-    y' = x' + 10 * (abs y)
+    x' = abs x
+    y' = x' + (abs y)
     res = withinRange x' y' inventory
     ok = case res of
       Left _ -> False
@@ -127,16 +127,16 @@ spec :: Spec
 spec = do
   describe "withinRange" $ do
     it "finds the sets of stamps whose total value lies within the given range (1)" $
-      (withinRange 280 290 sq1) `shouldBe` (Right sol1)
+      (withinRange 2.80 2.90 sq1) `shouldBe` (Right sol1)
 
     it "finds the sets of stamps whose total value lies within the given range (2)" $
-      (withinRange 232 233 sq2) `shouldBe` (Right sol2)
+      (withinRange 2.32 2.33 sq2) `shouldBe` (Right sol2)
 
     it "finds the sets of stamps whose total value lies within the given range (3)" $
-      (withinRange 800 1000 sq2) `shouldBe` (Right sol3)
+      (withinRange 8.00 10.00 sq2) `shouldBe` (Right sol3)
 
     it "should fail if the cost of the letter is bigger than the total value of the inventory" $
-      (withinRange 1100 1100 sq1) `shouldBe` (Left "The problem is infeasible!")
+      (withinRange 11.00 11.00 sq1) `shouldBe` (Left "The problem is infeasible!")
 
     it "should always fail if the inventory is empty" $ property $
       \ x -> ((withinRange (abs x) (1 + abs x) (empty 0)) `shouldBe` (Left "The problem is infeasible!"))

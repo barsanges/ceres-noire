@@ -27,7 +27,7 @@ dropSupersets :: Seq Collection -> Seq Collection
 dropSupersets xs = Seq.filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
-withinRange :: Int -> Int -> Collection -> Either String (Seq Collection)
+withinRange :: Double -> Double -> Collection -> Either String (Seq Collection)
 withinRange low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
@@ -40,7 +40,7 @@ withinRange low up inventory
 -- | The function that actually search the sets of stamps whose total value lies
 -- within the given range. Do not perform any check regarding the validity of
 -- the inputs.
-solve :: Int -> Int -> Collection -> Set Collection
+solve :: Double -> Double -> Collection -> Set Collection
 solve low up inventory = res
   where
     (_, res) = crease go (Set.singleton (emptyLike inventory), Set.empty) inventory
@@ -65,7 +65,7 @@ mkCollectionRange s col = Set.map go (Set.fromList (mkRange s))
 -- total value is lesser than `up`, and on the other hand the ones
 -- whose total value lies between `low` and `up`. All collections
 -- belonging to the second sequence belong also to the first one.
-sieve :: Int -> Int -> Set Collection -> (Set Collection, Set Collection)
+sieve :: Double -> Double -> Set Collection -> (Set Collection, Set Collection)
 sieve low up = foldr go (Set.empty, Set.empty)
   where
     go :: Collection
