@@ -105,9 +105,9 @@ instance Ord Collection where
           (bs', mw, bs'') = M.splitLookup k bs
 
 -- | Create a set of stamp.
-mkStampSet :: Int -> Int -> Int -> Maybe StampSet
+mkStampSet :: Int -> Double -> Int -> Maybe StampSet
 mkStampSet dp p q = if (dp >= 0) && (p > 0) && (q >= 0)
-                    then Just (StampSet { price_ = p
+                    then Just (StampSet { price_ = fromDouble dp p
                                         , quantity_ = q
                                         , decimalPlaces_ = dp
                                         })
@@ -149,6 +149,10 @@ crease f y0 xs = M.foldrWithKey go y0 (content xs)
                      , quantity_ = q
                      , decimalPlaces_ = decimalPlaces xs
                      }
+
+-- | Convert a double to an int, preserving a given decimal precision.
+fromDouble :: Int -> Double -> Int
+fromDouble dp x = round (x * 10**(fromIntegral dp))
 
 -- | Convert an int to a double with a given decimal precision.
 toDouble :: Int -> Int -> Double
@@ -238,7 +242,7 @@ fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
     go :: CsvStampSet -> (Int, Int)
-    go (CsvStampSet p q) = (round (p * 10**(fromIntegral dp)), q)
+    go (CsvStampSet p q) = (fromDouble dp p, q)
 
 -- | Read a collection of stamps from a CSV file.
 readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)

@@ -29,39 +29,39 @@ instance Arbitrary Collection where
   arbitrary = fmap (fromList 0) (listOf arbitrary)
 
 sq1 :: Collection
-sq1 = fromList 2 [ fromJust (mkStampSet 2 108 3)
-                 , fromJust (mkStampSet 2 143 2)
-                 , fromJust (mkStampSet 2 286 1)
+sq1 = fromList 2 [ fromJust (mkStampSet 2 1.08 3)
+                 , fromJust (mkStampSet 2 1.43 2)
+                 , fromJust (mkStampSet 2 2.86 1)
                  ]
 
 sq2 :: Collection
-sq2 = fromList 2 [ fromJust (mkStampSet 2 128 6)
-                 , fromJust (mkStampSet 2 232 2)
-                 , fromJust (mkStampSet 2 256 2)
+sq2 = fromList 2 [ fromJust (mkStampSet 2 1.28 6)
+                 , fromJust (mkStampSet 2 2.32 2)
+                 , fromJust (mkStampSet 2 2.56 2)
                  ]
 
 sol1 :: Seq Collection
-sol1 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 286 1)]
-                    , fromList 2 [fromJust (mkStampSet 2 143 2)]
+sol1 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 2.86 1)]
+                    , fromList 2 [fromJust (mkStampSet 2 1.43 2)]
                     ]
 
 sol2 :: Seq Collection
-sol2 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 232 1)] ]
+sol2 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 2.32 1)] ]
 
 sol3 :: Seq Collection
-sol3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 232 2), fromJust (mkStampSet 2 128 1)]
-                    , fromList 2 [fromJust (mkStampSet 2 232 2), fromJust (mkStampSet 2 128 3)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 1)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 3)]
-                    , fromList 2 [fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 5)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 128 3)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 128 5)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 232 2)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 232 2), fromJust (mkStampSet 2 128 2)]
-                    , fromList 2 [fromJust (mkStampSet 2 232 2), fromJust (mkStampSet 2 128 4)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 2)]
-                    , fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 4)]
-                    , fromList 2 [fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 6)]
+sol3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 2)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 4)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 2)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 4)]
+                    , fromList 2 [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 6)]
                     ]
 
 probGen :: Int -> Gen (Double, Double, Collection)
@@ -85,42 +85,42 @@ propTotalCost (x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
       Right zs -> all (\ z -> (totalValue z) >= x' && (totalValue z) <= y') zs
 
 multiple1 :: Seq Collection
-multiple1 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 128 1)]
-                         , fromList 2 [fromJust (mkStampSet 2 128 2)]
+multiple1 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 1.28 1)]
+                         , fromList 2 [fromJust (mkStampSet 2 1.28 2)]
                          ]
 
 simplified1 :: Seq Collection
-simplified1 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 128 1)]
+simplified1 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 1.28 1)]
                            ]
 
 multiple2 :: Seq Collection
-multiple2 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 128 1)]
-                         , fromList 2 [fromJust (mkStampSet 2 128 1), fromJust (mkStampSet 2 010 1)]
+multiple2 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 1.28 1)]
+                         , fromList 2 [fromJust (mkStampSet 2 1.28 1), fromJust (mkStampSet 2 0.10 1)]
                          ]
 
 simplified2 :: Seq Collection
-simplified2 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 128 1)]
+simplified2 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 1.28 1)]
                            ]
 
 multiple3 :: Seq Collection
-multiple3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 128 3)]
-                         , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 128 1)]
+multiple3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
+                         , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
                          ]
 
 simplified3 :: Seq Collection
-simplified3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 128 3)]
-                           , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 128 1)]
+simplified3 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
                            ]
 
 simplified4 :: Seq Collection
-simplified4 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 232 2), fromJust (mkStampSet 2 128 1)]
-                           , fromList 2 [fromJust (mkStampSet 2 232 2), fromJust (mkStampSet 2 128 3)]
-                           , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 1)]
-                           , fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 3)]
-                           , fromList 2 [fromJust (mkStampSet 2 232 1), fromJust (mkStampSet 2 128 5)]
-                           , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 128 3)]
-                           , fromList 2 [fromJust (mkStampSet 2 256 1), fromJust (mkStampSet 2 128 5)]
-                           , fromList 2 [fromJust (mkStampSet 2 256 2), fromJust (mkStampSet 2 232 2)]
+simplified4 = Seq.fromList [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
+                           , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
                            ]
 
 spec :: Spec

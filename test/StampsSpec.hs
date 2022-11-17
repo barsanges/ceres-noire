@@ -24,22 +24,22 @@ instance Arbitrary StampSet where
     return (fromJust (mkStampSet 0 (1 + abs p) (abs q)))
 
 s1 :: StampSet
-s1 = fromJust (mkStampSet 2 110 2)
+s1 = fromJust (mkStampSet 2 1.10 2)
 
 s2 :: StampSet
-s2 = fromJust (mkStampSet 2 220 1)
+s2 = fromJust (mkStampSet 2 2.20 1)
 
 sq1 :: Collection
 sq1 = fromList 2 [s1, s2]
 
 sq2 :: Collection
-sq2 = fromList 2 [ fromJust (mkStampSet 2 100 2)
-                 , fromJust (mkStampSet 2 300 1)
+sq2 = fromList 2 [ fromJust (mkStampSet 2 1.00 2)
+                 , fromJust (mkStampSet 2 3.00 1)
                  ]
 
 sq3 :: Collection
-sq3 = fromList 2 [ fromJust (mkStampSet 2 100 1)
-                 , fromJust (mkStampSet 2 200 2)
+sq3 = fromList 2 [ fromJust (mkStampSet 2 1.00 1)
+                 , fromJust (mkStampSet 2 2.00 2)
                  ]
 
 stampSetEq :: StampSet -> Bool
