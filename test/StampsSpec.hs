@@ -21,26 +21,26 @@ instance Arbitrary StampSet where
   arbitrary = do
     p <- arbitrary
     q <- arbitrary
-    return (fromJust (mkStampSet (1 + abs p) (abs q)))
+    return (fromJust (mkStampSet 0 (1 + abs p) (abs q)))
 
 s1 :: StampSet
-s1 = fromJust (mkStampSet 110 2)
+s1 = fromJust (mkStampSet 2 110 2)
 
 s2 :: StampSet
-s2 = fromJust (mkStampSet 220 1)
+s2 = fromJust (mkStampSet 2 220 1)
 
 sq1 :: Collection
-sq1 = fromList [s1, s2]
+sq1 = fromList 2 [s1, s2]
 
 sq2 :: Collection
-sq2 = fromList [ fromJust (mkStampSet 100 2)
-               , fromJust (mkStampSet 300 1)
-               ]
+sq2 = fromList 2 [ fromJust (mkStampSet 2 100 2)
+                 , fromJust (mkStampSet 2 300 1)
+                 ]
 
 sq3 :: Collection
-sq3 = fromList [ fromJust (mkStampSet 100 1)
-               , fromJust (mkStampSet 200 2)
-               ]
+sq3 = fromList 2 [ fromJust (mkStampSet 2 100 1)
+                 , fromJust (mkStampSet 2 200 2)
+                 ]
 
 stampSetEq :: StampSet -> Bool
 stampSetEq x = x == x

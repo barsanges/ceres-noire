@@ -18,6 +18,7 @@ module Stamps (
   totalQuantity,
   mkRange,
   empty,
+  emptyLike,
   add,
   fromList,
   crease,
@@ -42,7 +43,10 @@ import Numeric ( showFFloat )
 
 -- | A set of similar stamps is defined by the unitary price of the stamp, and
 -- the quantity of stamps in the set.
-data StampSet = StampSet Int Int
+data StampSet = StampSet { price_ :: Int
+                         , quantity_ :: Int
+                         , decimalPlaces_ :: Int
+                         }
   deriving Show
 
 instance Eq StampSet where
@@ -66,8 +70,15 @@ instance Csv.FromNamedRecord CsvStampSet where
       else fail "Invalid data!" -- FIXME: improve the error message.
 
 -- | A collection of stamps.
-newtype Collection = Col { content :: IntMap Int }
-  deriving (Eq, Show)
+data Collection = Col { content :: IntMap Int
+                      , decimalPlaces :: Int
+                      }
+  deriving Show
+
+instance Eq Collection where
+  xs == ys = if (decimalPlaces xs) /= (decimalPlaces ys)
+             then error "Malformed data!" -- FIXME: improve the error message
+             else (content xs) == (content ys)
 
 instance Ord Collection where
   compare xs ys
@@ -94,42 +105,62 @@ instance Ord Collection where
           (bs', mw, bs'') = M.splitLookup k bs
 
 -- | Create a set of stamp.
-mkStampSet :: Int -> Int -> Maybe StampSet
-mkStampSet p q = if (p > 0) && (q >= 0)
-  then Just (StampSet p q)
-  else Nothing
+mkStampSet :: Int -> Int -> Int -> Maybe StampSet
+mkStampSet dp p q = if (dp >= 0) && (p > 0) && (q >= 0)
+                    then Just (StampSet { price_ = p
+                                        , quantity_ = q
+                                        , decimalPlaces_ = dp
+                                        })
+                    else Nothing
 
 -- | An empty collection of stamps.
-empty :: Collection
-empty = Col { content = M.empty }
+empty :: Int -> Collection
+empty dp = Col { content = M.empty
+               , decimalPlaces = dp
+               }
+
+-- | An empty collection of stamps, which has the same precision for
+-- stamp prices has the given collection.
+emptyLike :: Collection -> Collection
+emptyLike xs = empty (decimalPlaces xs)
 
 -- | Add a set to a collection.
 add :: StampSet -> Collection -> Collection
-add (StampSet p q) xs = if (p > 0) && (q > 0)
-                        then xs { content = M.insertWith (+) p q (content xs) }
-                        else xs
+add s xs = if (decimalPlaces_ s) /= (decimalPlaces xs)
+           then error "Malformed data!" -- FIXME: improve the error message
+           else if (p > 0) && (q > 0)
+                then xs { content = M.insertWith (+) p q (content xs) }
+                else xs
+  where
+    p = price s
+    q = quantity s
 
 -- | Turn a list of stamp sets into a collection.
-fromList :: [StampSet] -> Collection
-fromList xs = foldr add empty xs
+fromList :: Int -> [StampSet] -> Collection
+fromList dp xs = foldr add (empty dp) xs
 
 -- | A `fold` for collections.
 crease :: (StampSet -> b -> b) -> b -> Collection -> b
 crease f y0 xs = M.foldrWithKey go y0 (content xs)
   where
-    go p q y = f (StampSet p q) y
+    go p q y = f s y
+      where
+        s = StampSet { price_ = p
+                     , quantity_ = q
+                     , decimalPlaces_ = decimalPlaces xs
+                     }
 
 -- | Get the unitary price of a stamp.
 price :: StampSet -> Int
-price (StampSet p _) = p
+price s = price_ s
 
 -- | Get the available number of stamps in a set of stamps.
 quantity :: StampSet -> Int
-quantity (StampSet _ q) = q
+quantity s = quantity_ s
 
 -- | Get the total value of a set of stamps.
 setValue :: StampSet -> Int
-setValue (StampSet p q) = p * q
+setValue s = (price s) * (quantity s)
 
 -- | Get the total value of a collection of stamps.
 totalValue :: Collection -> Int
@@ -142,7 +173,12 @@ totalQuantity xs = (sum . M.elems . content) xs
 -- | Create a list of sets of length `1 + quantity s`. The first set
 -- contains zero stamp, the second one, etc, and the last one `quantity s`.
 mkRange :: StampSet -> [StampSet]
-mkRange (StampSet p q) = [ StampSet p i | i <- [0..q] ]
+mkRange s = [ StampSet { price_ = price s
+                       , quantity_ = i
+                       , decimalPlaces_ = decimalPlaces_ s
+                       }
+            | i <- [0..(quantity s)]
+            ]
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
 noStrictSubset :: Seq Collection -> Collection -> Bool
@@ -169,15 +205,15 @@ isStrictSubset' = flip isStrictSubset
 -- exhaustive and should not be used for serialisation. The argument 'dp' is
 -- used to render the prices of the stamps as decimal values, and not integral
 -- ones.
-reprCollection :: Int -> Collection -> String
-reprCollection dp xs =
+reprCollection :: Collection -> String
+reprCollection xs =
   fmtAsFloat (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
     fmtAsFloat :: Int -> ShowS
     fmtAsFloat a = showFFloat (Just 2) a'
       where
         a' :: Double
-        a' = ((fromIntegral a) / (10**(fromIntegral dp)))
+        a' = (fromIntegral a) / (10**(fromIntegral (decimalPlaces xs)))
 
     stamps = intercalate ", " (fmap go (M.toDescList . content $ xs))
 
@@ -188,7 +224,9 @@ reprCollection dp xs =
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> Right (Col { content = M.fromList (fmap go (V.toList x)) })
+  Right (_, x) -> Right (Col { content = M.fromList (fmap go (V.toList x))
+                             , decimalPlaces = dp
+                             })
   where
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }

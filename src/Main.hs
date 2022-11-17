@@ -78,4 +78,4 @@ main = do
     Left err -> putStrLn err
     Right inventory -> case withinRange low' up' inventory of
       Left msg -> putStrLn msg
-      Right res -> putStrLn (reprCollections dp (dropSupersets res))
+      Right res -> putStrLn (reprCollections (dropSupersets res))
