@@ -66,7 +66,11 @@ args = info (argsParser <**> helper)
   ( fullDesc
   <> header "cn -- cérès noire"
   <> progDesc "Choose the right stamps combination for your letter based on a\
-              \ given stamps inventory" )
+              \ given stamps inventory"
+  <> footer "This program is licensed under the GNU GPL 3 (see\
+            \ www.gnu.org/licenses/). It comes with absolutely no\
+            \ warranty. This is free software, and you are welcome to\
+            \ redistribute it under certain conditions.")
 
 -- | Application entry point.
 main :: IO ()
