@@ -8,9 +8,11 @@ cost $c_i$ and available in a limited quantity ${\bar x}_i$, an
 *admissible solution* to the problem is a vector $x$ of positive
 integers such that:
 
-$$C_1 \leq \sum_i c_i x_i \leq C_2 \\: \text{and} \\: \forall i, x_i \leq {\bar x}_i$$
+$$C_1 \leq \sum_i c_i x_i \leq C_2 \\: \text{and} \\: \forall i, x_i \leq {\bar x}_i  \\: \text{and} \\: \sum_i x_i \leq N$$
 
-where $C_1$ and $C_2$ are the lower and upper bounds of the problem.
+where $C_1$ and $C_2$ are the lower and upper bounds of the problem,
+and $N$ is the maximal number of stamps that can be used in the
+solution.
 
 A solution $x$ is a *superset* of another solution $y$ if and only if:
 

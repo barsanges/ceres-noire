@@ -18,6 +18,7 @@ data Input = Fin String | Str String
 -- | Command line arguments.
 data Args = Args { low :: Double
                  , up :: Double
+                 , nstamps :: Int
                  , input :: Input
                  , comma :: Bool
                  , decimalPlaces :: Int
@@ -31,6 +32,9 @@ argsParser = Args
   <*> ( argument auto
         ( metavar "MAX"
         <> help "Maximal cost of the letter in euros" ))
+  <*> ( argument auto
+        ( metavar "NSTAMPS"
+        <> help "Maximal number of stamps that can be used in the solution" ))
   <*> ( ( Fin <$> strOption
           ( long "file"
           <> short 'f'
@@ -74,6 +78,6 @@ main = do
       Str s -> pure (readInventoryString (comma cli) dp s)
   case maybeInventory of
     Left err -> putStrLn err
-    Right inventory -> case withinRange (low cli) (up cli) inventory of
+    Right inventory -> case withinRange (Just (nstamps cli)) (low cli) (up cli) inventory of
       Left msg -> putStrLn msg
       Right res -> putStrLn (reprCollections (dropSupersets res))
