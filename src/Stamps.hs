@@ -233,16 +233,23 @@ reprCollection xs =
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> Right (Col { content = M.fromList (fmap go (V.toList x))
-                             , decimalPlaces = dp
-                             })
+  Right (_, x) -> let pairs = fmap (toPair dp) (V.toList x)
+                  in Right (Col { content = foldr go M.empty pairs
+                                , decimalPlaces = dp
+                                })
   where
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
-    go :: CsvStampSet -> (Int, Int)
-    go (CsvStampSet p q) = (fromDouble dp p, q)
+    go :: (Int, Int) -> IntMap Int -> IntMap Int
+    go (p, q) dict = case M.lookup p dict of
+      Nothing -> M.insert p q dict
+      Just q0 -> M.insert p (q0 + q) dict
+
+-- | Convertit un CsvStampSet en une paire d'entiers
+toPair :: Int -> CsvStampSet -> (Int, Int)
+toPair dp (CsvStampSet p q) = (fromDouble dp p, q)
 
 -- | Read a collection of stamps from a CSV file.
 readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)
