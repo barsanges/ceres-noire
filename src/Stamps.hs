@@ -73,36 +73,7 @@ instance Csv.FromNamedRecord CsvStampSet where
 data Collection = Col { content :: IntMap Int
                       , decimalPlaces :: Int
                       }
-  deriving Show
-
-instance Eq Collection where
-  xs == ys = if (decimalPlaces xs) /= (decimalPlaces ys)
-             then error "Malformed data!" -- FIXME: improve the error message
-             else (content xs) == (content ys)
-
-instance Ord Collection where
-  compare xs ys
-    | xs == ys = EQ
-    | val == LT = LT
-    | val == GT = GT
-    | otherwise = if qty == EQ
-                  then go (M.toDescList (content xs)) (content ys)
-                  else qty
-    where
-      val = compare (totalValue xs) (totalValue ys)
-      qty = compare (totalQuantity xs) (totalQuantity ys)
-
-      go :: [(Int, Int)] -> IntMap Int -> Ordering
-      go [] _ = EQ
-      go ((k, v):as) bs = if M.null bs''
-                          then case mw of
-                                 Nothing -> LT
-                                 Just w -> if v == w
-                                           then go as bs'
-                                           else compare v w
-                          else GT
-        where
-          (bs', mw, bs'') = M.splitLookup k bs
+  deriving (Eq, Ord, Show)
 
 -- | Create a set of stamp.
 mkStampSet :: Int -> Double -> Int -> Maybe StampSet
