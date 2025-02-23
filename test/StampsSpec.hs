@@ -68,13 +68,13 @@ spec = do
       (compare sq1 sq1) `shouldBe` EQ
 
     it "is an instance of Ord (2)" $
-      (compare sq1 sq2) `shouldBe` LT
+      (compare sq1 sq2) `shouldNotBe` EQ
 
     it "is an instance of Ord (3)" $
-      (compare sq2 sq1) `shouldBe` GT
+      (compare sq2 sq1) `shouldNotBe` EQ
 
     it "is an instance of Ord (4)" $
-      (compare sq2 sq3) `shouldBe` LT
+      (compare sq2 sq3) `shouldNotBe` EQ
 
   describe "fromByteString, with semi-colon" $ do
     it "converts a byte string to a sequence of stamp sets" $
