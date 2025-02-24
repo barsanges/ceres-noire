@@ -13,17 +13,14 @@ module Stamps (
   mkStampSet,
   price,
   quantity,
-  setValue,
   totalValue,
   totalQuantity,
   changeQuantity,
-  mkRange,
   empty,
   emptyLike,
   add,
   fromList,
   collectionToList,
-  crease,
   noStrictSubset,
   reprCollection,
   fromByteString,
@@ -118,17 +115,6 @@ collectionToList xs = fmap ( \ (p, i) -> StampSet { price_ = p
                                                   , quantity_ = i
                                                   , decimalPlaces_ = decimalPlaces xs } ) (M.toList $ content xs)
 
--- | A `fold` for collections.
-crease :: (StampSet -> b -> b) -> b -> Collection -> b
-crease f y0 xs = M.foldrWithKey go y0 (content xs)
-  where
-    go p q y = f s y
-      where
-        s = StampSet { price_ = p
-                     , quantity_ = q
-                     , decimalPlaces_ = decimalPlaces xs
-                     }
-
 -- | Convert a double to an int, preserving a given decimal precision.
 fromDouble :: Int -> Double -> Int
 fromDouble dp x = round (x * 10**(fromIntegral dp))
@@ -145,10 +131,6 @@ price s = toDouble (decimalPlaces_ s) (price_ s)
 quantity :: StampSet -> Int
 quantity s = quantity_ s
 
--- | Get the total value of a set of stamps.
-setValue :: StampSet -> Double
-setValue s = toDouble (decimalPlaces_ s) ((price_ s) * (quantity_ s))
-
 -- | Get the total value of a collection of stamps.
 totalValue :: Collection -> Double
 totalValue xs = toDouble (decimalPlaces xs) total
@@ -162,16 +144,6 @@ totalQuantity xs = (sum . M.elems . content) xs
 -- | Change the quantity in a set.
 changeQuantity :: StampSet -> Int -> StampSet
 changeQuantity x i = x { quantity_ = i }
-
--- | Create a list of sets of length `1 + quantity s`. The first set
--- contains zero stamp, the second one, etc, and the last one `quantity s`.
-mkRange :: StampSet -> [StampSet]
-mkRange s = [ StampSet { price_ = price_ s
-                       , quantity_ = i
-                       , decimalPlaces_ = decimalPlaces_ s
-                       }
-            | i <- [0..(quantity s)]
-            ]
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
 noStrictSubset :: Seq Collection -> Collection -> Bool

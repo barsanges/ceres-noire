@@ -16,8 +16,6 @@ import Data.Foldable ( toList )
 import Data.List ( intercalate )
 import Data.Sequence ( Seq(..) )
 import qualified Data.Sequence as Seq
-import Data.Set ( Set )
-import qualified Data.Set as Set
 
 import Stamps
 
@@ -77,30 +75,6 @@ findAbove mn up (x:ys) | up < 0 = [(0, [])]
 mminus :: Num a => Maybe a -> a -> Maybe a
 mminus Nothing _ = Nothing
 mminus (Just x) y = Just (x - y)
-
--- | Create all collections resulting from the union of `col` and the
--- elements of `mkRange s`.
-mkCollectionRange :: StampSet -> Collection -> Set Collection
-mkCollectionRange s col = Set.map go (Set.fromList (mkRange s))
-  where
-    go :: StampSet -> Collection
-    go s' = add s' col
-
--- | Sort the given collections, and return on one hand the ones whose
--- total value is lesser than `up`, and on the other hand the ones
--- whose total value lies between `low` and `up`. All collections
--- belonging to the second sequence belong also to the first one.
-sieve :: Maybe Int -> Double -> Double -> Set Collection -> (Set Collection, Set Collection)
-sieve mn low up = foldr go (Set.empty, Set.empty)
-  where
-    go :: Collection
-       -> (Set Collection, Set Collection)
-       -> (Set Collection, Set Collection)
-    go xs (tmp, res)
-      | any (\ n -> totalQuantity xs > n) mn = (tmp, res)
-      | totalValue xs > up = (tmp, res)
-      | totalValue xs < low = (Set.insert xs tmp, res)
-      | otherwise = (Set.insert xs tmp, Set.insert xs res)
 
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.
