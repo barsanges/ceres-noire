@@ -9,7 +9,6 @@ Find the sets of stamps whose total value lies within the given range.
 module Algorithm (
   withinRange,
   dropSupersets,
-  reprCollection,
   reprCollections
   ) where
 
