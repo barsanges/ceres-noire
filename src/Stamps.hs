@@ -16,11 +16,13 @@ module Stamps (
   setValue,
   totalValue,
   totalQuantity,
+  changeQuantity,
   mkRange,
   empty,
   emptyLike,
   add,
   fromList,
+  collectionToList,
   crease,
   noStrictSubset,
   reprCollection,
@@ -110,6 +112,12 @@ add s xs = if (decimalPlaces_ s) /= (decimalPlaces xs)
 fromList :: Int -> [StampSet] -> Collection
 fromList dp xs = foldr add (empty dp) xs
 
+-- | Turn a collection into a list of stamp sets.
+collectionToList :: Collection -> [StampSet]
+collectionToList xs = fmap ( \ (p, i) -> StampSet { price_ = p
+                                                  , quantity_ = i
+                                                  , decimalPlaces_ = decimalPlaces xs } ) (M.toList $ content xs)
+
 -- | A `fold` for collections.
 crease :: (StampSet -> b -> b) -> b -> Collection -> b
 crease f y0 xs = M.foldrWithKey go y0 (content xs)
@@ -150,6 +158,10 @@ totalValue xs = toDouble (decimalPlaces xs) total
 -- | Get the total number of stamps in a collection of stamps.
 totalQuantity :: Collection -> Int
 totalQuantity xs = (sum . M.elems . content) xs
+
+-- | Change the quantity in a set.
+changeQuantity :: StampSet -> Int -> StampSet
+changeQuantity x i = x { quantity_ = i }
 
 -- | Create a list of sets of length `1 + quantity s`. The first set
 -- contains zero stamp, the second one, etc, and the last one `quantity s`.
