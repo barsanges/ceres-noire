@@ -34,7 +34,6 @@ import qualified Data.Csv as Csv
 import Data.List ( intercalate )
 import Data.IntMap ( IntMap )
 import qualified Data.IntMap as M
-import Data.Sequence ( Seq(..) )
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
@@ -146,7 +145,7 @@ changeQuantity :: StampSet -> Int -> StampSet
 changeQuantity x i = x { quantity_ = i }
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
-noStrictSubset :: Seq Collection -> Collection -> Bool
+noStrictSubset :: [Collection] -> Collection -> Bool
 noStrictSubset ss s = not (any (isStrictSubset' s) ss)
 
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
