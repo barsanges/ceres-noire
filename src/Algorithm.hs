@@ -36,7 +36,7 @@ withinRange tolerance mn low up inventory
                 else Right (sort res)
     where
       tmp = solve mn (low - tolerance) (up + tolerance) (collectionToList inventory)
-      res = fmap (foldr add (emptyLike inventory)) tmp
+      res = fmap (foldr add empty) tmp
 
 -- | The function that actually search the sets of stamps whose total
 -- value lies within the given range. Do not perform any check

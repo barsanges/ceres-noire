@@ -23,9 +23,6 @@ instance Arbitrary StampSet where
     q <- arbitrary
     return (fromJust (mkStampSet 0 (1 + abs p) (abs q)))
 
-instance Arbitrary Collection where
-  arbitrary = fmap (fromList 0) (listOf arbitrary)
-
 -- | xs `eitherShouldMatch` ys sets the expectation that xs has the
 -- same elements that ys has, possibly in another order.
 eitherShouldMatch :: (HasCallStack, Show a, Eq a)
@@ -38,45 +35,45 @@ eitherShouldMatch (Right _) (Left _) = expectationFailure "cannot compare Right 
 eitherShouldMatch (Right x) (Right y) = x `shouldMatchList` y
 
 sq1 :: Collection
-sq1 = fromList 2 [ fromJust (mkStampSet 2 1.08 3)
-                 , fromJust (mkStampSet 2 1.43 2)
-                 , fromJust (mkStampSet 2 2.86 1)
-                 ]
+sq1 = [ fromJust (mkStampSet 2 1.08 3)
+      , fromJust (mkStampSet 2 1.43 2)
+      , fromJust (mkStampSet 2 2.86 1)
+      ]
 
 sq2 :: Collection
-sq2 = fromList 2 [ fromJust (mkStampSet 2 1.28 6)
-                 , fromJust (mkStampSet 2 2.32 2)
-                 , fromJust (mkStampSet 2 2.56 2)
-                 ]
+sq2 = [ fromJust (mkStampSet 2 2.56 2)
+      , fromJust (mkStampSet 2 2.32 2)
+      , fromJust (mkStampSet 2 1.28 6)
+      ]
 
 sol1 :: [Collection]
-sol1 = [ fromList 2 [fromJust (mkStampSet 2 2.86 1)]
-       , fromList 2 [fromJust (mkStampSet 2 1.43 2)]
+sol1 = [ [fromJust (mkStampSet 2 2.86 1)]
+       , [fromJust (mkStampSet 2 1.43 2)]
        ]
 
 sol2 :: [Collection]
-sol2 = [ fromList 2 [fromJust (mkStampSet 2 2.32 1)] ]
+sol2 = [ [fromJust (mkStampSet 2 2.32 1)] ]
 
 sol3 :: [Collection]
-sol3 = [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
-       , fromList 2 [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
-       , fromList 2 [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 2)]
-       , fromList 2 [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 4)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 2)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 4)]
-       , fromList 2 [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 6)]
+sol3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
+       , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
+       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
+       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
+       , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
+       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
+       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
+       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
+       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 2)]
+       , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 4)]
+       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 2)]
+       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 4)]
+       , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 6)]
        ]
 
 sol4 :: [Collection]
-sol4 = [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
-       , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
+sol4 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
+       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
+       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
        ]
 
 probGen :: Int -> Gen (Int, Double, Double, Collection)
@@ -84,7 +81,7 @@ probGen n = do
   q <- arbitrary
   x <- arbitrary
   y <- arbitrary
-  z <- resize n (fmap (fromList 0) (listOf arbitrary))
+  z <- resize n (listOf arbitrary)
   return (q, x, y, z)
 
 propTotalCost :: (Int, Double, Double, Collection) -> Property
@@ -118,40 +115,40 @@ propTotalQuantity (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
       Right zs -> all (\ z -> (totalQuantity z) <= n') zs
 
 multiple1 :: [Collection]
-multiple1 = [ fromList 2 [fromJust (mkStampSet 2 1.28 1)]
-            , fromList 2 [fromJust (mkStampSet 2 1.28 2)]
+multiple1 = [ [fromJust (mkStampSet 2 1.28 1)]
+            , [fromJust (mkStampSet 2 1.28 2)]
             ]
 
 simplified1 :: [Collection]
-simplified1 = [ fromList 2 [fromJust (mkStampSet 2 1.28 1)] ]
+simplified1 = [ [fromJust (mkStampSet 2 1.28 1)] ]
 
 multiple2 :: [Collection]
-multiple2 = [ fromList 2 [fromJust (mkStampSet 2 1.28 1)]
-            , fromList 2 [fromJust (mkStampSet 2 1.28 1), fromJust (mkStampSet 2 0.10 1)]
+multiple2 = [ [fromJust (mkStampSet 2 1.28 1)]
+            , [fromJust (mkStampSet 2 1.28 1), fromJust (mkStampSet 2 0.10 1)]
             ]
 
 simplified2 :: [Collection]
-simplified2 = [ fromList 2 [fromJust (mkStampSet 2 1.28 1)] ]
+simplified2 = [ [fromJust (mkStampSet 2 1.28 1)] ]
 
 multiple3 :: [Collection]
-multiple3 = [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
-            , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
+multiple3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
+            , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
             ]
 
 simplified3 :: [Collection]
-simplified3 = [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
-              , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
+simplified3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
+              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
               ]
 
 simplified4 :: [Collection]
-simplified4 = [ fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
-              , fromList 2 [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
-              , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
-              , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
-              , fromList 2 [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
-              , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
-              , fromList 2 [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
-              , fromList 2 [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
+simplified4 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
+              , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
+              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
+              , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
+              , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
+              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
+              , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
+              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
               ]
 
 spec :: Spec
@@ -176,16 +173,16 @@ spec = do
       (withinRange 1e-9 (Just 3) 8.00 10.00 sq2) `eitherShouldMatch` (Left "The problem is infeasible!")
 
     it "should always fail if the inventory is empty" $ property $
-      \ x -> ((withinRange 1e-9 Nothing (abs x) (1 + abs x) (empty 0)) `eitherShouldMatch` (Left "The problem is infeasible!"))
+      \ x -> ((withinRange 1e-9 Nothing (abs x) (1 + abs x) empty) `eitherShouldMatch` (Left "The problem is infeasible!"))
 
     it "should always fail if the minimum value is negative" $ property $
-      \ x -> ((withinRange 1e-9 Nothing (-(abs x) - 1) (abs x) (empty 0)) `eitherShouldMatch` (Left "The minimum value should be a positive float!"))
+      \ x -> ((withinRange 1e-9 Nothing (-(abs x) - 1) (abs x) empty) `eitherShouldMatch` (Left "The minimum value should be a positive float!"))
 
     it "should always fail if the maximum value is lower than the minimum value" $ property $
-      \ x -> ((withinRange 1e-9 Nothing ((abs x) + 10) ((abs x) + 5) (empty 0)) `eitherShouldMatch` (Left "The maximum value should be greater than the minimum value!"))
+      \ x -> ((withinRange 1e-9 Nothing ((abs x) + 10) ((abs x) + 5) empty) `eitherShouldMatch` (Left "The maximum value should be greater than the minimum value!"))
 
     it "should always fail if the maximal number of stamp is lower or equal to 0" $ property $
-      \ n x -> ((withinRange 1e-9 (Just (-(abs n))) (abs x) (abs (2 * x)) (empty 0)) `eitherShouldMatch` (Left "The maximal number of stamps should be strictly positive!"))
+      \ n x -> ((withinRange 1e-9 (Just (-(abs n))) (abs x) (abs (2 * x)) empty) `eitherShouldMatch` (Left "The maximal number of stamps should be strictly positive!"))
 
     it "should always give solutions (if they exist) with a cost greater or equal to the cost of the letter" $ property $
       forAll (probGen 5) propTotalCost
@@ -213,4 +210,4 @@ spec = do
       \ xs -> ((length $ dropSupersets xs) <= (length xs))
 
     it "should leave singletons untouched" $ property $
-      \ x -> ((dropSupersets $ [fromList 0 [x]]) == [fromList 0 [x]])
+      \ x -> ((dropSupersets $ [[x]]) == [[x]])

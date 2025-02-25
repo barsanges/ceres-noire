@@ -17,7 +17,6 @@ module Stamps (
   totalQuantity,
   changeQuantity,
   empty,
-  emptyLike,
   add,
   fromList,
   collectionToList,
@@ -32,8 +31,6 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
 import Data.List ( intercalate )
-import Data.IntMap ( IntMap )
-import qualified Data.IntMap as M
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
@@ -68,10 +65,7 @@ instance Csv.FromNamedRecord CsvStampSet where
       else fail "Invalid data!" -- FIXME: improve the error message.
 
 -- | A collection of stamps.
-data Collection = Col { content :: IntMap Int
-                      , decimalPlaces :: Int
-                      }
-  deriving (Eq, Ord, Show)
+type Collection = [StampSet]
 
 -- | Create a set of stamp.
 mkStampSet :: Int -> Double -> Int -> Maybe StampSet
@@ -83,36 +77,25 @@ mkStampSet dp p q = if (dp >= 0) && (p > 0) && (q >= 0)
                     else Nothing
 
 -- | An empty collection of stamps.
-empty :: Int -> Collection
-empty dp = Col { content = M.empty
-               , decimalPlaces = dp
-               }
-
--- | An empty collection of stamps, which has the same precision for
--- stamp prices has the given collection.
-emptyLike :: Collection -> Collection
-emptyLike xs = empty (decimalPlaces xs)
+empty :: Collection
+empty = []
 
 -- | Add a set to a collection.
 add :: StampSet -> Collection -> Collection
-add s xs = if (decimalPlaces_ s) /= (decimalPlaces xs)
-           then error "Malformed data!" -- FIXME: improve the error message
-           else if (p > 0) && (q > 0)
-                then xs { content = M.insertWith (+) p q (content xs) }
-                else xs
+add s xs = if (p > 0) && (q > 0)
+           then (s:xs)
+           else xs
   where
     p = price_ s
     q = quantity s
 
 -- | Turn a list of stamp sets into a collection.
-fromList :: Int -> [StampSet] -> Collection
-fromList dp xs = foldr add (empty dp) xs
+fromList :: [StampSet] -> Collection
+fromList = id
 
 -- | Turn a collection into a list of stamp sets.
 collectionToList :: Collection -> [StampSet]
-collectionToList xs = fmap ( \ (p, i) -> StampSet { price_ = p
-                                                  , quantity_ = i
-                                                  , decimalPlaces_ = decimalPlaces xs } ) (M.toList $ content xs)
+collectionToList = id
 
 -- | Convert a double to an int, preserving a given decimal precision.
 fromDouble :: Int -> Double -> Int
@@ -132,13 +115,11 @@ quantity s = quantity_ s
 
 -- | Get the total value of a collection of stamps.
 totalValue :: Collection -> Double
-totalValue xs = toDouble (decimalPlaces xs) total
-  where
-    total = (sum . (fmap (\ (p, q) -> p * q)) . M.toList . content) xs
+totalValue xs = sum (fmap (\ x -> price x * (fromIntegral $ quantity x)) xs)
 
 -- | Get the total number of stamps in a collection of stamps.
 totalQuantity :: Collection -> Int
-totalQuantity xs = (sum . M.elems . content) xs
+totalQuantity xs = sum (fmap quantity xs)
 
 -- | Change the quantity in a set.
 changeQuantity :: StampSet -> Int -> StampSet
@@ -151,13 +132,13 @@ noStrictSubset ss s = not (any (isStrictSubset' s) ss)
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
 isStrictSubset :: Collection -> Collection -> Bool
 isStrictSubset s s' =
-  (all go (M.toList . content $ s)) && (totalQuantity s < totalQuantity s')
+  (all go s) && (totalQuantity s < totalQuantity s')
   where
-    go :: (Int, Int) -> Bool
-    go (p, q) = any og (M.toList . content $ s')
+    go :: StampSet -> Bool
+    go u = any og s'
       where
-        og :: (Int, Int) -> Bool
-        og (p', q') = (p == p') && (q <= q')
+        og :: StampSet -> Bool
+        og v = ((abs (price u - price v) < 1e-9)) && (quantity u <= quantity v)
 
 -- | Same as `isStrictSubset`, but with the arguments reversed:
 -- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
@@ -173,35 +154,25 @@ reprCollection :: Int -> Collection -> String
 reprCollection precision xs =
   showFFloat (Just precision) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
-    fmtAsFloat :: Int -> ShowS
-    fmtAsFloat a = showFFloat (Just precision) (toDouble precision a)
-
-    stamps = intercalate ", " (fmap go (M.toDescList . content $ xs))
-
-    go :: (Int, Int) -> String
-    go (p, q) = (show q) ++ "x at " ++ (fmtAsFloat p $ " EUR")
+    stamps = intercalate ", " (fmap go xs)
+    go :: StampSet -> String
+    go u = (show (quantity u)) ++ "x at " ++ (showFFloat (Just precision) (price u) $ " EUR")
 
 -- | Read a collection of stamps from a CSV-like bytestring.
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> let pairs = fmap (toPair dp) (V.toList x)
-                  in Right (Col { content = foldr go M.empty pairs
-                                , decimalPlaces = dp
-                                })
+  Right (_, x) -> let stamps = fmap go (V.toList x)
+                  in Right stamps
   where
+    go :: CsvStampSet -> StampSet
+    go (CsvStampSet p q) = StampSet { price_ = fromDouble dp p
+                                    , quantity_ = q
+                                    , decimalPlaces_ = dp
+                                    }
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
-
-    go :: (Int, Int) -> IntMap Int -> IntMap Int
-    go (p, q) dict = case M.lookup p dict of
-      Nothing -> M.insert p q dict
-      Just q0 -> M.insert p (q0 + q) dict
-
--- | Convertit un CsvStampSet en une paire d'entiers
-toPair :: Int -> CsvStampSet -> (Int, Int)
-toPair dp (CsvStampSet p q) = (fromDouble dp p, q)
 
 -- | Read a collection of stamps from a CSV file.
 readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)
