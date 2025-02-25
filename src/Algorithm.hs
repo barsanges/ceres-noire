@@ -80,5 +80,5 @@ mminus (Just x) y = Just (x - y)
 
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.
-reprCollections :: [Collection] -> String
-reprCollections seqs = intercalate "\n" (toList $ fmap reprCollection seqs)
+reprCollections :: Int -> [Collection] -> String
+reprCollections precision seqs = intercalate "\n" (toList $ fmap (reprCollection precision) seqs)

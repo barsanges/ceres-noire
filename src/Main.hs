@@ -84,4 +84,4 @@ main = do
     Left err -> putStrLn err
     Right inventory -> case withinRange (1e-9) (Just (nstamps cli)) (low cli) (up cli) inventory of
       Left msg -> putStrLn msg
-      Right res -> putStrLn (reprCollections (dropSupersets res))
+      Right res -> putStrLn (reprCollections dp (dropSupersets res))

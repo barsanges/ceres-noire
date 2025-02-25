@@ -169,14 +169,12 @@ isStrictSubset' = flip isStrictSubset
 -- exhaustive and should not be used for serialisation. The argument 'dp' is
 -- used to render the prices of the stamps as decimal values, and not integral
 -- ones.
-reprCollection :: Collection -> String
-reprCollection xs =
-  showFFloat (Just dp) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
+reprCollection :: Int -> Collection -> String
+reprCollection precision xs =
+  showFFloat (Just precision) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
-    dp = decimalPlaces xs
-
     fmtAsFloat :: Int -> ShowS
-    fmtAsFloat a = showFFloat (Just dp) (toDouble dp a)
+    fmtAsFloat a = showFFloat (Just precision) (toDouble precision a)
 
     stamps = intercalate ", " (fmap go (M.toDescList . content $ xs))
 
