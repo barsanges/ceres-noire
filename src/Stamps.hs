@@ -25,7 +25,7 @@ module Stamps (
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
-import Data.List ( intercalate )
+import Data.List ( groupBy, intercalate )
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
@@ -133,14 +133,22 @@ reprCollection precision xs =
 fromByteString :: Bool -> Int -> BL.ByteString -> Either String [StampSet]
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> let stamps = fmap go (V.toList x)
+  Right (_, x) -> let stamps = fmap go1 (fmap go2 $ groupBy go3 $ V.toList x)
                   in Right stamps
   where
-    go :: CsvStampSet -> StampSet
-    go (CsvStampSet p q) = StampSet { price_ = fromDouble dp p
-                                    , quantity_ = q
-                                    , decimalPlaces_ = dp
-                                    }
+    go1 :: CsvStampSet -> StampSet
+    go1 (CsvStampSet p q) = StampSet { price_ = fromDouble dp p
+                                     , quantity_ = q
+                                     , decimalPlaces_ = dp
+                                     }
+
+    go2 :: [CsvStampSet] -> CsvStampSet
+    go2 [] = CsvStampSet 0 0
+    go2 ((CsvStampSet p q):xs) = CsvStampSet p (q + (foldr (\ (CsvStampSet _ q') t -> q' + t) 0 xs))
+
+    go3 :: CsvStampSet -> CsvStampSet -> Bool
+    go3 (CsvStampSet p _) (CsvStampSet p' _) = abs (p - p') < 1e-9
+
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
