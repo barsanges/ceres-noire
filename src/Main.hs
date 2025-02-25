@@ -82,6 +82,6 @@ main = do
       Str s -> pure (readInventoryString (comma cli) dp s)
   case maybeInventory of
     Left err -> putStrLn err
-    Right inventory -> case withinRange (Just (nstamps cli)) (low cli) (up cli) inventory of
+    Right inventory -> case withinRange (1e-9) (Just (nstamps cli)) (low cli) (up cli) inventory of
       Left msg -> putStrLn msg
       Right res -> putStrLn (reprCollections (dropSupersets res))

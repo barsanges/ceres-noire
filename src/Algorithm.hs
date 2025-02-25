@@ -21,8 +21,13 @@ dropSupersets :: [Collection] -> [Collection]
 dropSupersets xs = filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
-withinRange :: Maybe Int -> Double -> Double -> Collection -> Either String [Collection]
-withinRange mn low up inventory
+withinRange :: Double
+            -> Maybe Int
+            -> Double
+            -> Double
+            -> Collection
+            -> Either String [Collection]
+withinRange tolerance mn low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
   | any (\ n -> n <= 0) mn = Left "The maximal number of stamps should be strictly positive!"
@@ -30,7 +35,7 @@ withinRange mn low up inventory
                 then Left "The problem is infeasible!"
                 else Right (sort res)
     where
-      tmp = solve mn (low - 1e-9) (up + 1e-9) (collectionToList inventory)
+      tmp = solve mn (low - tolerance) (up + tolerance) (collectionToList inventory)
       res = fmap (foldr add (emptyLike inventory)) tmp
 
 -- | The function that actually search the sets of stamps whose total
