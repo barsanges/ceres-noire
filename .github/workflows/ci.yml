@@ -1,23 +1,19 @@
-name: CI
+name: ci
 
-on:
-  push:
-
-  pull_request:
+on: [push, pull_request]
 
 jobs:
   stack:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: haskell/actions/setup@v2
+    - uses: haskell-actions/setup@v2
       name: Setup Haskell Stack
       with:
         enable-stack: true
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache ~/.stack
       with:
         path: ~/.stack
