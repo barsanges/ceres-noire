@@ -9,17 +9,12 @@ Stamps and collections of stamps.
 
 module Stamps (
   StampSet,
-  Collection,
   mkStampSet,
   price,
   quantity,
   totalValue,
   totalQuantity,
   changeQuantity,
-  empty,
-  add,
-  fromList,
-  collectionToList,
   noStrictSubset,
   reprCollection,
   fromByteString,
@@ -64,9 +59,6 @@ instance Csv.FromNamedRecord CsvStampSet where
       then return (CsvStampSet p q)
       else fail "Invalid data!" -- FIXME: improve the error message.
 
--- | A collection of stamps.
-type Collection = [StampSet]
-
 -- | Create a set of stamp.
 mkStampSet :: Int -> Double -> Int -> Maybe StampSet
 mkStampSet dp p q = if (dp >= 0) && (p > 0) && (q >= 0)
@@ -75,27 +67,6 @@ mkStampSet dp p q = if (dp >= 0) && (p > 0) && (q >= 0)
                                         , decimalPlaces_ = dp
                                         })
                     else Nothing
-
--- | An empty collection of stamps.
-empty :: Collection
-empty = []
-
--- | Add a set to a collection.
-add :: StampSet -> Collection -> Collection
-add s xs = if (p > 0) && (q > 0)
-           then (s:xs)
-           else xs
-  where
-    p = price_ s
-    q = quantity s
-
--- | Turn a list of stamp sets into a collection.
-fromList :: [StampSet] -> Collection
-fromList = id
-
--- | Turn a collection into a list of stamp sets.
-collectionToList :: Collection -> [StampSet]
-collectionToList = id
 
 -- | Convert a double to an int, preserving a given decimal precision.
 fromDouble :: Int -> Double -> Int
@@ -114,11 +85,11 @@ quantity :: StampSet -> Int
 quantity s = quantity_ s
 
 -- | Get the total value of a collection of stamps.
-totalValue :: Collection -> Double
+totalValue :: [StampSet] -> Double
 totalValue xs = sum (fmap (\ x -> price x * (fromIntegral $ quantity x)) xs)
 
 -- | Get the total number of stamps in a collection of stamps.
-totalQuantity :: Collection -> Int
+totalQuantity :: [StampSet] -> Int
 totalQuantity xs = sum (fmap quantity xs)
 
 -- | Change the quantity in a set.
@@ -126,11 +97,11 @@ changeQuantity :: StampSet -> Int -> StampSet
 changeQuantity x i = x { quantity_ = i }
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
-noStrictSubset :: [Collection] -> Collection -> Bool
+noStrictSubset :: [[StampSet]] -> [StampSet] -> Bool
 noStrictSubset ss s = not (any (isStrictSubset' s) ss)
 
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
-isStrictSubset :: Collection -> Collection -> Bool
+isStrictSubset :: [StampSet] -> [StampSet] -> Bool
 isStrictSubset s s' =
   (all go s) && (totalQuantity s < totalQuantity s')
   where
@@ -143,14 +114,14 @@ isStrictSubset s s' =
 -- | Same as `isStrictSubset`, but with the arguments reversed:
 -- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
 -- `s'`.
-isStrictSubset' :: Collection -> Collection -> Bool
+isStrictSubset' :: [StampSet] -> [StampSet] -> Bool
 isStrictSubset' = flip isStrictSubset
 
 -- | Turn a collection into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation. The argument 'dp' is
 -- used to render the prices of the stamps as decimal values, and not integral
 -- ones.
-reprCollection :: Int -> Collection -> String
+reprCollection :: Int -> [StampSet] -> String
 reprCollection precision xs =
   showFFloat (Just precision) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
@@ -159,7 +130,7 @@ reprCollection precision xs =
     go u = (show (quantity u)) ++ "x at " ++ (showFFloat (Just precision) (price u) $ " EUR")
 
 -- | Read a collection of stamps from a CSV-like bytestring.
-fromByteString :: Bool -> Int -> BL.ByteString -> Either String Collection
+fromByteString :: Bool -> Int -> BL.ByteString -> Either String [StampSet]
 fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
   Right (_, x) -> let stamps = fmap go (V.toList x)
@@ -175,11 +146,11 @@ fromByteString comma dp bs = case Csv.decodeByNameWith myOptions bs of
       else Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ';') }
 
 -- | Read a collection of stamps from a CSV file.
-readInventoryFile :: Bool -> Int -> String -> IO (Either String Collection)
+readInventoryFile :: Bool -> Int -> String -> IO (Either String [StampSet])
 readInventoryFile comma dp fname = do
   csvData <- BL.readFile fname
   return (fromByteString comma dp csvData)
 
 -- | Read a collection of stamps from a CSV-like string.
-readInventoryString :: Bool -> Int -> String -> Either String Collection
+readInventoryString :: Bool -> Int -> String -> Either String [StampSet]
 readInventoryString comma dp csvData = fromByteString comma dp (encodeUtf8 . T.pack $ csvData)

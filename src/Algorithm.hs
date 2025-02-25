@@ -17,7 +17,7 @@ import Data.List ( intercalate, sort )
 import Stamps
 
 -- | Filter the sets that are supersets of other sets in the sequence.
-dropSupersets :: [Collection] -> [Collection]
+dropSupersets :: [[StampSet]] -> [[StampSet]]
 dropSupersets xs = filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
@@ -25,8 +25,8 @@ withinRange :: Double
             -> Maybe Int
             -> Double
             -> Double
-            -> Collection
-            -> Either String [Collection]
+            -> [StampSet]
+            -> Either String [[StampSet]]
 withinRange tolerance mn low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
@@ -35,8 +35,7 @@ withinRange tolerance mn low up inventory
                 then Left "The problem is infeasible!"
                 else Right (sort res)
     where
-      tmp = solve mn (low - tolerance) (up + tolerance) (collectionToList inventory)
-      res = fmap (foldr add empty) tmp
+      res = solve mn (low - tolerance) (up + tolerance) inventory
 
 -- | The function that actually search the sets of stamps whose total
 -- value lies within the given range. Do not perform any check
@@ -66,6 +65,7 @@ findAbove mn up (x:ys) | up < 0 = [(0, [])]
              Nothing -> min (floor (up / (price x))) (quantity x)
              Just n -> min n (min (floor (up / (price x))) (quantity x))
     go :: Int -> [(Double, [StampSet])]
+    go 0 = findAbove mn up ys
     go i = [ (cost + current, (changeQuantity x i):zs)
            | (cost, zs) <- findAbove mn' up' ys ]
       where
@@ -80,5 +80,5 @@ mminus (Just x) y = Just (x - y)
 
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.
-reprCollections :: Int -> [Collection] -> String
+reprCollections :: Int -> [[StampSet]] -> String
 reprCollections precision seqs = intercalate "\n" (toList $ fmap (reprCollection precision) seqs)

@@ -29,15 +29,15 @@ s1 = fromJust (mkStampSet 2 1.10 2)
 s2 :: StampSet
 s2 = fromJust (mkStampSet 2 2.20 1)
 
-sq1 :: Collection
+sq1 :: [StampSet]
 sq1 = [s1, s2]
 
-sq2 :: Collection
+sq2 :: [StampSet]
 sq2 = [ fromJust (mkStampSet 2 1.00 2)
       , fromJust (mkStampSet 2 3.00 1)
       ]
 
-sq3 :: Collection
+sq3 :: [StampSet]
 sq3 = [ fromJust (mkStampSet 2 1.00 1)
       , fromJust (mkStampSet 2 2.00 2)
       ]

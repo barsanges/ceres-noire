@@ -34,27 +34,27 @@ eitherShouldMatch (Left _) (Right _) = expectationFailure "cannot compare Left a
 eitherShouldMatch (Right _) (Left _) = expectationFailure "cannot compare Right and Left"
 eitherShouldMatch (Right x) (Right y) = x `shouldMatchList` y
 
-sq1 :: Collection
+sq1 :: [StampSet]
 sq1 = [ fromJust (mkStampSet 2 1.08 3)
       , fromJust (mkStampSet 2 1.43 2)
       , fromJust (mkStampSet 2 2.86 1)
       ]
 
-sq2 :: Collection
+sq2 :: [StampSet]
 sq2 = [ fromJust (mkStampSet 2 2.56 2)
       , fromJust (mkStampSet 2 2.32 2)
       , fromJust (mkStampSet 2 1.28 6)
       ]
 
-sol1 :: [Collection]
+sol1 :: [[StampSet]]
 sol1 = [ [fromJust (mkStampSet 2 2.86 1)]
        , [fromJust (mkStampSet 2 1.43 2)]
        ]
 
-sol2 :: [Collection]
+sol2 :: [[StampSet]]
 sol2 = [ [fromJust (mkStampSet 2 2.32 1)] ]
 
-sol3 :: [Collection]
+sol3 :: [[StampSet]]
 sol3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
        , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
        , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
@@ -70,13 +70,13 @@ sol3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJu
        , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 6)]
        ]
 
-sol4 :: [Collection]
+sol4 :: [[StampSet]]
 sol4 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
        , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
        , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
        ]
 
-probGen :: Int -> Gen (Int, Double, Double, Collection)
+probGen :: Int -> Gen (Int, Double, Double, [StampSet])
 probGen n = do
   q <- arbitrary
   x <- arbitrary
@@ -84,7 +84,7 @@ probGen n = do
   z <- resize n (listOf arbitrary)
   return (q, x, y, z)
 
-propTotalCost :: (Int, Double, Double, Collection) -> Property
+propTotalCost :: (Int, Double, Double, [StampSet]) -> Property
 propTotalCost (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
     eps = 1e-9
@@ -99,7 +99,7 @@ propTotalCost (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
       Left _ -> False -- Never happens in practice.
       Right zs -> all (\ z -> (totalValue z) >= x' - eps && (totalValue z) <= y' + eps) zs
 
-propTotalQuantity :: (Int, Double, Double, Collection) -> Property
+propTotalQuantity :: (Int, Double, Double, [StampSet]) -> Property
 propTotalQuantity (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
     eps = 1e-9
@@ -114,33 +114,33 @@ propTotalQuantity (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
       Left _ -> False -- Never happens in practice.
       Right zs -> all (\ z -> (totalQuantity z) <= n') zs
 
-multiple1 :: [Collection]
+multiple1 :: [[StampSet]]
 multiple1 = [ [fromJust (mkStampSet 2 1.28 1)]
             , [fromJust (mkStampSet 2 1.28 2)]
             ]
 
-simplified1 :: [Collection]
+simplified1 :: [[StampSet]]
 simplified1 = [ [fromJust (mkStampSet 2 1.28 1)] ]
 
-multiple2 :: [Collection]
+multiple2 :: [[StampSet]]
 multiple2 = [ [fromJust (mkStampSet 2 1.28 1)]
             , [fromJust (mkStampSet 2 1.28 1), fromJust (mkStampSet 2 0.10 1)]
             ]
 
-simplified2 :: [Collection]
+simplified2 :: [[StampSet]]
 simplified2 = [ [fromJust (mkStampSet 2 1.28 1)] ]
 
-multiple3 :: [Collection]
+multiple3 :: [[StampSet]]
 multiple3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
             , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
             ]
 
-simplified3 :: [Collection]
+simplified3 :: [[StampSet]]
 simplified3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
               , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
               ]
 
-simplified4 :: [Collection]
+simplified4 :: [[StampSet]]
 simplified4 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
               , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
               , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
@@ -173,16 +173,16 @@ spec = do
       (withinRange 1e-9 (Just 3) 8.00 10.00 sq2) `eitherShouldMatch` (Left "The problem is infeasible!")
 
     it "should always fail if the inventory is empty" $ property $
-      \ x -> ((withinRange 1e-9 Nothing (abs x) (1 + abs x) empty) `eitherShouldMatch` (Left "The problem is infeasible!"))
+      \ x -> ((withinRange 1e-9 Nothing (abs x) (1 + abs x) []) `eitherShouldMatch` (Left "The problem is infeasible!"))
 
     it "should always fail if the minimum value is negative" $ property $
-      \ x -> ((withinRange 1e-9 Nothing (-(abs x) - 1) (abs x) empty) `eitherShouldMatch` (Left "The minimum value should be a positive float!"))
+      \ x -> ((withinRange 1e-9 Nothing (-(abs x) - 1) (abs x) []) `eitherShouldMatch` (Left "The minimum value should be a positive float!"))
 
     it "should always fail if the maximum value is lower than the minimum value" $ property $
-      \ x -> ((withinRange 1e-9 Nothing ((abs x) + 10) ((abs x) + 5) empty) `eitherShouldMatch` (Left "The maximum value should be greater than the minimum value!"))
+      \ x -> ((withinRange 1e-9 Nothing ((abs x) + 10) ((abs x) + 5) []) `eitherShouldMatch` (Left "The maximum value should be greater than the minimum value!"))
 
     it "should always fail if the maximal number of stamp is lower or equal to 0" $ property $
-      \ n x -> ((withinRange 1e-9 (Just (-(abs n))) (abs x) (abs (2 * x)) empty) `eitherShouldMatch` (Left "The maximal number of stamps should be strictly positive!"))
+      \ n x -> ((withinRange 1e-9 (Just (-(abs n))) (abs x) (abs (2 * x)) []) `eitherShouldMatch` (Left "The maximal number of stamps should be strictly positive!"))
 
     it "should always give solutions (if they exist) with a cost greater or equal to the cost of the letter" $ property $
       forAll (probGen 5) propTotalCost
