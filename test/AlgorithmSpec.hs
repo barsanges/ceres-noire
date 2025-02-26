@@ -12,8 +12,6 @@ module AlgorithmSpec ( spec ) where
 import Test.Hspec
 import Test.QuickCheck
 
-import Data.Maybe ( fromJust )
-
 import Algorithm
 import Stamps
 
@@ -21,7 +19,7 @@ instance Arbitrary StampSet where
   arbitrary = do
     p <- arbitrary
     q <- arbitrary
-    return (fromJust (mkStampSet 0 (1 + abs p) (abs q)))
+    return (St { price = (1 + abs p), quantity = (abs q) })
 
 -- | xs `eitherShouldMatch` ys sets the expectation that xs has the
 -- same elements that ys has, possibly in another order.
@@ -35,45 +33,45 @@ eitherShouldMatch (Right _) (Left _) = expectationFailure "cannot compare Right 
 eitherShouldMatch (Right x) (Right y) = x `shouldMatchList` y
 
 sq1 :: [StampSet]
-sq1 = [ fromJust (mkStampSet 2 1.08 3)
-      , fromJust (mkStampSet 2 1.43 2)
-      , fromJust (mkStampSet 2 2.86 1)
+sq1 = [ St { price = 1.08, quantity = 3 }
+      , St { price = 1.43, quantity = 2 }
+      , St { price = 2.86, quantity = 1 }
       ]
 
 sq2 :: [StampSet]
-sq2 = [ fromJust (mkStampSet 2 2.56 2)
-      , fromJust (mkStampSet 2 2.32 2)
-      , fromJust (mkStampSet 2 1.28 6)
+sq2 = [ St { price = 2.56, quantity = 2 }
+      , St { price = 2.32, quantity = 2 }
+      , St { price = 1.28, quantity = 6 }
       ]
 
 sol1 :: [[StampSet]]
-sol1 = [ [fromJust (mkStampSet 2 2.86 1)]
-       , [fromJust (mkStampSet 2 1.43 2)]
+sol1 = [ [St { price = 2.86, quantity = 1 }]
+       , [St { price = 1.43, quantity = 2 }]
        ]
 
 sol2 :: [[StampSet]]
-sol2 = [ [fromJust (mkStampSet 2 2.32 1)] ]
+sol2 = [ [St { price = 2.32, quantity = 1 }] ]
 
 sol3 :: [[StampSet]]
-sol3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
-       , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
-       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
-       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
-       , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
-       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
-       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
-       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
-       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 2)]
-       , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 4)]
-       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 2)]
-       , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 4)]
-       , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 6)]
+sol3 = [ [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 1 }]
+       , [St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 3 }]
+       , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 1 }]
+       , [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 3 }]
+       , [St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 5 }]
+       , [St { price = 2.56, quantity = 2 }, St { price = 1.28, quantity = 3 }]
+       , [St { price = 2.56, quantity = 1 }, St { price = 1.28, quantity = 5 }]
+       , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 2 }]
+       , [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 2 }]
+       , [St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 4 }]
+       , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 2 }]
+       , [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 4 }]
+       , [St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 6 }]
        ]
 
 sol4 :: [[StampSet]]
-sol4 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
-       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
-       , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
+sol4 = [ [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 1 }]
+       , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 1 }]
+       , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 2 }]
        ]
 
 probGen :: Int -> Gen (Int, Double, Double, [StampSet])
@@ -115,40 +113,40 @@ propTotalQuantity (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
       Right zs -> all (\ z -> (totalQuantity z) <= n') zs
 
 multiple1 :: [[StampSet]]
-multiple1 = [ [fromJust (mkStampSet 2 1.28 1)]
-            , [fromJust (mkStampSet 2 1.28 2)]
+multiple1 = [ [St { price = 1.28, quantity = 1 }]
+            , [St { price = 1.28, quantity = 2 }]
             ]
 
 simplified1 :: [[StampSet]]
-simplified1 = [ [fromJust (mkStampSet 2 1.28 1)] ]
+simplified1 = [ [St { price = 1.28, quantity = 1 }] ]
 
 multiple2 :: [[StampSet]]
-multiple2 = [ [fromJust (mkStampSet 2 1.28 1)]
-            , [fromJust (mkStampSet 2 1.28 1), fromJust (mkStampSet 2 0.10 1)]
+multiple2 = [ [St { price = 1.28, quantity = 1 }]
+            , [St { price = 1.28, quantity = 1 }, St { price = 0.10, quantity = 1 }]
             ]
 
 simplified2 :: [[StampSet]]
-simplified2 = [ [fromJust (mkStampSet 2 1.28 1)] ]
+simplified2 = [ [St { price = 1.28, quantity = 1 }] ]
 
 multiple3 :: [[StampSet]]
-multiple3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
-            , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
+multiple3 = [ [St { price = 2.56, quantity = 1 }, St { price = 1.28, quantity = 3 }]
+            , [St { price = 2.56, quantity = 2 }, St { price = 1.28, quantity = 1 }]
             ]
 
 simplified3 :: [[StampSet]]
-simplified3 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 3)]
-              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 1)]
+simplified3 = [ [St { price = 2.56, quantity = 1 }, St { price = 1.28, quantity = 3 }]
+              , [St { price = 2.56, quantity = 2 }, St { price = 1.28, quantity = 1 }]
               ]
 
 simplified4 :: [[StampSet]]
-simplified4 = [ [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 1)]
-              , [fromJust (mkStampSet 2 2.32 2), fromJust (mkStampSet 2 1.28 3)]
-              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 1)]
-              , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 3)]
-              , [fromJust (mkStampSet 2 2.32 1), fromJust (mkStampSet 2 1.28 5)]
-              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 1.28 3)]
-              , [fromJust (mkStampSet 2 2.56 1), fromJust (mkStampSet 2 1.28 5)]
-              , [fromJust (mkStampSet 2 2.56 2), fromJust (mkStampSet 2 2.32 2)]
+simplified4 = [ [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 1 }]
+              , [St { price = 2.32, quantity = 2 }, St { price = 1.28, quantity = 3 }]
+              , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 1 }]
+              , [St { price = 2.56, quantity = 1 }, St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 3 }]
+              , [St { price = 2.32, quantity = 1 }, St { price = 1.28, quantity = 5 }]
+              , [St { price = 2.56, quantity = 2 }, St { price = 1.28, quantity = 3 }]
+              , [St { price = 2.56, quantity = 1 }, St { price = 1.28, quantity = 5 }]
+              , [St { price = 2.56, quantity = 2 }, St { price = 2.32, quantity = 2 }]
               ]
 
 spec :: Spec

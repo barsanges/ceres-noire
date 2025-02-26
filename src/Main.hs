@@ -78,8 +78,8 @@ main = do
   cli <- execParser args
   let dp = decimalPlaces cli
   maybeInventory <- case input cli of
-      Fin fin -> readInventoryFile (comma cli) dp fin
-      Str s -> pure (readInventoryString (comma cli) dp s)
+      Fin fin -> readInventoryFile (comma cli) fin
+      Str s -> pure (readInventoryString (comma cli) s)
   case maybeInventory of
     Left err -> putStrLn err
     Right inventory -> case withinRange (1e-9) (Just (nstamps cli)) (low cli) (up cli) inventory of

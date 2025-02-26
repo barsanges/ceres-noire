@@ -13,33 +13,31 @@ module StampsSpec ( spec ) where
 import Test.Hspec
 import Test.QuickCheck
 
-import Data.Maybe ( fromJust )
-
 import Stamps
 
 instance Arbitrary StampSet where
   arbitrary = do
     p <- arbitrary
     q <- arbitrary
-    return (fromJust (mkStampSet 0 (1 + abs p) (abs q)))
+    return (St { price = (1 + abs p), quantity = (abs q) })
 
 s1 :: StampSet
-s1 = fromJust (mkStampSet 2 1.10 2)
+s1 = St { price = 1.10, quantity = 2 }
 
 s2 :: StampSet
-s2 = fromJust (mkStampSet 2 2.20 1)
+s2 = St { price = 2.20, quantity = 1 }
 
 sq1 :: [StampSet]
 sq1 = [s1, s2]
 
 sq2 :: [StampSet]
-sq2 = [ fromJust (mkStampSet 2 1.00 2)
-      , fromJust (mkStampSet 2 3.00 1)
+sq2 = [ St { price = 1.00, quantity = 2 }
+      , St { price = 3.00, quantity = 1 }
       ]
 
 sq3 :: [StampSet]
-sq3 = [ fromJust (mkStampSet 2 1.00 1)
-      , fromJust (mkStampSet 2 2.00 2)
+sq3 = [ St { price = 1.00, quantity = 1 }
+      , St { price = 2.00, quantity = 2 }
       ]
 
 stampSetEq :: StampSet -> Bool
@@ -78,44 +76,44 @@ spec = do
 
   describe "fromByteString, with semi-colon" $ do
     it "converts a byte string to a sequence of stamp sets" $
-      (fromByteString False 2 "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)
+      (fromByteString False "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)
 
     it "accepts a header with more columns than requested" $
-      (fromByteString False 2 "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `shouldBe` (Right sq1)
+      (fromByteString False "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `shouldBe` (Right sq1)
 
     it "fails if the header does not contain 'price' and 'quantity'" $
-      (fromByteString False 2 "foo;bar\r\n1.1;27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
+      (fromByteString False "foo;bar\r\n1.1;27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
 
     it "fails if fields are missing" $
-      (fromByteString False 2 "price;quantity\r\n1.1;\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2;1\\r\\n\"")
+      (fromByteString False "price;quantity\r\n1.1;\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2;1\\r\\n\"")
 
     it "fails if fields have the wrong type" $
-      (fromByteString False 2 "price;quantity\r\n1.1;abc\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2;1\\r\\n\"")
+      (fromByteString False "price;quantity\r\n1.1;abc\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2;1\\r\\n\"")
 
     it "fails if the string contains no data" $
-      (fromByteString False 2 "price;quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
+      (fromByteString False "price;quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
 
     it "fails if the string contains negative values" $
-      (fromByteString False 2 "price;quantity\r\n1.1;-2\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2;1\\r\\n\"")
+      (fromByteString False "price;quantity\r\n1.1;-2\r\n2.2;1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2;1\\r\\n\"")
 
   describe "fromByteString, with comma" $ do
     it "converts a byte string to a sequence of stamp sets" $
-      (fromByteString True 2 "price,quantity\r\n1.1,2\r\n2.2,1\r\n") `shouldBe` (Right sq1)
+      (fromByteString True "price,quantity\r\n1.1,2\r\n2.2,1\r\n") `shouldBe` (Right sq1)
 
     it "accepts a header with more columns than requested" $
-      (fromByteString True 2 "price,quantity,foo\r\n1.1,2,abc\r\n2.2,1,xyz\r\n") `shouldBe` (Right sq1)
+      (fromByteString True "price,quantity,foo\r\n1.1,2,abc\r\n2.2,1,xyz\r\n") `shouldBe` (Right sq1)
 
     it "fails if the header does not contain 'price' and 'quantity'" $
-      (fromByteString True 2 "foo,bar\r\n1.1,27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
+      (fromByteString True "foo,bar\r\n1.1,27\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: no field named \"price\") at \"\\r\\n\"")
 
     it "fails if fields are missing" $
-      (fromByteString True 2 "price,quantity\r\n1.1,\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2,1\\r\\n\"")
+      (fromByteString True "price,quantity\r\n1.1,\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"\" (not enough input)) at \"\\r\\n2.2,1\\r\\n\"")
 
     it "fails if fields have the wrong type" $
-      (fromByteString True 2 "price,quantity\r\n1.1,abc\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2,1\\r\\n\"")
+      (fromByteString True "price,quantity\r\n1.1,abc\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: expected Int, got \"abc\" (Failed reading: takeWhile1)) at \"\\r\\n2.2,1\\r\\n\"")
 
     it "fails if the string contains no data" $
-      (fromByteString True 2 "price,quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
+      (fromByteString True "price,quantity") `shouldBe` (Left "parse error (not enough input) at \"\"")
 
     it "fails if the string contains negative values" $
-      (fromByteString True 2 "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")
+      (fromByteString True "price,quantity\r\n1.1,-2\r\n2.2,1\r\n") `shouldBe` (Left "parse error (Failed reading: conversion error: Invalid data!) at \"\\r\\n2.2,1\\r\\n\"")

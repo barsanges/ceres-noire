@@ -66,7 +66,7 @@ findAbove mn up (x:ys) | up < 0 = [(0, [])]
              Just n -> min n (min (floor (up / (price x))) (quantity x))
     go :: Int -> [(Double, [StampSet])]
     go 0 = findAbove mn up ys
-    go i = [ (cost + current, (changeQuantity x i):zs)
+    go i = [ (cost + current, (x { quantity = i }):zs)
            | (cost, zs) <- findAbove mn' up' ys ]
       where
         mn' = mn `mminus` i
