@@ -15,6 +15,10 @@ import Test.QuickCheck
 
 import Stamps
 
+instance Eq StampSet where
+  x == y = (abs (price x - price y) < precision)
+           && (abs (quantity x - quantity y) == 0)
+
 instance Arbitrary StampSet where
   arbitrary = do
     p <- arbitrary
@@ -28,52 +32,10 @@ s2 :: StampSet
 s2 = St { price = 2.20, quantity = 1 }
 
 sq1 :: [StampSet]
-sq1 = [s1, s2]
-
-sq2 :: [StampSet]
-sq2 = [ St { price = 1.00, quantity = 2 }
-      , St { price = 3.00, quantity = 1 }
-      ]
-
-sq3 :: [StampSet]
-sq3 = [ St { price = 1.00, quantity = 1 }
-      , St { price = 2.00, quantity = 2 }
-      ]
-
-stampSetEq :: StampSet -> Bool
-stampSetEq x = x == x
+sq1 = [s2, s1]
 
 spec :: Spec
 spec = do
-  describe "StampSet" $ do
-    it "is an instance of Eq (1)" $
-      s1 `shouldBe` s1
-
-    it "is an instance of Eq (2)" $
-      s1 `shouldNotBe` s2
-
-    it "a stamp set is always equal to itself" $ property $
-      stampSetEq
-
-  describe "Collection" $ do
-    it "is an instance of Eq (1)" $
-      sq1 `shouldBe` sq1
-
-    it "is an instance of Eq (2)" $
-      sq1 `shouldNotBe` sq2
-
-    it "is an instance of Ord (1)" $
-      (compare sq1 sq1) `shouldBe` EQ
-
-    it "is an instance of Ord (2)" $
-      (compare sq1 sq2) `shouldNotBe` EQ
-
-    it "is an instance of Ord (3)" $
-      (compare sq2 sq1) `shouldNotBe` EQ
-
-    it "is an instance of Ord (4)" $
-      (compare sq2 sq3) `shouldNotBe` EQ
-
   describe "fromByteString, with semi-colon" $ do
     it "converts a byte string to a sequence of stamp sets" $
       (fromByteString False "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)

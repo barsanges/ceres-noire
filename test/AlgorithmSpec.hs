@@ -15,6 +15,10 @@ import Test.QuickCheck
 import Algorithm
 import Stamps
 
+instance Eq StampSet where
+  x == y = (abs (price x - price y) < precision)
+           && (abs (quantity x - quantity y) == 0)
+
 instance Arbitrary StampSet where
   arbitrary = do
     p <- arbitrary

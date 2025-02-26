@@ -12,6 +12,7 @@ module Stamps (
   StampSet(..),
   totalValue,
   totalQuantity,
+  sortCollections,
   noStrictSubset,
   reprCollection,
   fromByteString,
@@ -22,7 +23,7 @@ module Stamps (
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
-import Data.List ( groupBy, intercalate, sort )
+import Data.List ( groupBy, intercalate, sortBy )
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
@@ -40,15 +41,6 @@ data StampSet = St { price :: Double
                    }
   deriving Show
 
-instance Eq StampSet where
-  x == y = (abs (price x - price y) < precision)
-           && (abs (quantity x - quantity y) == 0)
-
-instance Ord StampSet where
-  compare x y = if abs (price x - price y) < precision
-                then compare (quantity x) (quantity y)
-                else compare (price x) (price y)
-
 instance Csv.FromNamedRecord StampSet where
   parseNamedRecord r = do
     p <- Csv.lookup r "price"
@@ -64,6 +56,39 @@ totalValue xs = sum (fmap (\ x -> price x * (fromIntegral $ quantity x)) xs)
 -- | Get the total number of stamps in a collection of stamps.
 totalQuantity :: [StampSet] -> Int
 totalQuantity xs = sum (fmap quantity xs)
+
+-- | Compare two sets.
+compareSets :: StampSet -> StampSet -> Ordering
+compareSets x y = if abs (price x - price y) < precision
+                  then compare (quantity y) (quantity x)
+                  else compare (price y) (price x)
+
+-- | Compare two collections: the "smallest" is the one with first the
+-- lowest total value, then the lowest number of stamps, and finally
+-- the most expensive ones.
+compareCollection :: [StampSet] -> [StampSet] -> Ordering
+compareCollection xs ys
+  | abs (yval - xval) > precision = compare yval xval
+  | totalQuantity ys < totalQuantity xs = GT
+  | totalQuantity ys == totalQuantity xs = recursiveCompare xs ys
+  | otherwise = LT
+  where
+    xval = totalValue xs
+    yval = totalValue ys
+
+    recursiveCompare :: [StampSet] -> [StampSet] -> Ordering
+    recursiveCompare [] [] = EQ
+    recursiveCompare [] _ = LT
+    recursiveCompare _ [] = GT
+    recursiveCompare (u:us) (v:vs) = case compareSets u v of
+                                       GT -> GT
+                                       LT -> LT
+                                       EQ -> recursiveCompare us vs
+
+-- | Sort each collection in a list of collections, and sort the
+-- resulting list.
+sortCollections :: [[StampSet]] -> [[StampSet]]
+sortCollections = (sortBy compareCollection) . (fmap (sortBy compareSets))
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
 noStrictSubset :: [[StampSet]] -> [StampSet] -> Bool
@@ -96,7 +121,7 @@ reprCollection decimals xs =
 fromByteString :: Bool -> BL.ByteString -> Either String [StampSet]
 fromByteString comma bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> let stamps = fmap go2 $ groupBy go1 $ sort $ V.toList x
+  Right (_, x) -> let stamps = fmap go2 $ groupBy go1 $ sortBy compareSets $ V.toList x
                   in Right stamps
   where
     go2 :: [StampSet] -> StampSet

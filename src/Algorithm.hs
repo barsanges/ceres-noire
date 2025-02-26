@@ -13,7 +13,7 @@ module Algorithm (
   ) where
 
 import Data.Foldable ( toList )
-import Data.List ( intercalate, sort )
+import Data.List ( intercalate )
 import Stamps
 
 -- | Filter the sets that are supersets of other sets in the sequence.
@@ -32,7 +32,7 @@ withinRange mn low up inventory
   | any (\ n -> n <= 0) mn = Left "The maximal number of stamps should be strictly positive!"
   | otherwise = if null res
                 then Left "The problem is infeasible!"
-                else Right (sort res)
+                else Right (sortCollections res)
     where
       res = solve mn (low - precision) (up + precision) inventory
 
