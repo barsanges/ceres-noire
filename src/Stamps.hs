@@ -22,7 +22,7 @@ module Stamps (
 import qualified Data.ByteString.Lazy as BL
 import Data.Char ( ord )
 import qualified Data.Csv as Csv
-import Data.List ( groupBy, intercalate )
+import Data.List ( groupBy, intercalate, sort )
 import qualified Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
@@ -96,7 +96,7 @@ reprCollection decimals xs =
 fromByteString :: Bool -> BL.ByteString -> Either String [StampSet]
 fromByteString comma bs = case Csv.decodeByNameWith myOptions bs of
   Left msg -> Left msg
-  Right (_, x) -> let stamps = fmap go2 $ groupBy go1 $ V.toList x
+  Right (_, x) -> let stamps = fmap go2 $ groupBy go1 $ sort $ V.toList x
                   in Right stamps
   where
     go2 :: [StampSet] -> StampSet

@@ -78,6 +78,9 @@ spec = do
     it "converts a byte string to a sequence of stamp sets" $
       (fromByteString False "price;quantity\r\n1.1;2\r\n2.2;1\r\n") `shouldBe` (Right sq1)
 
+    it "merges stamp sets with the same price" $
+      (fromByteString False "price;quantity\r\n1.1;1\r\n2.2;1\r\n1.1;1\r\n") `shouldBe` (Right sq1)
+
     it "accepts a header with more columns than requested" $
       (fromByteString False "price;quantity;foo\r\n1.1;2;abc\r\n2.2;1;xyz\r\n") `shouldBe` (Right sq1)
 
