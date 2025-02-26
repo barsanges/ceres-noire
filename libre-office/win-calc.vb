@@ -31,7 +31,7 @@ Sub LaunchCeresNoire
 	low = replace(CStr(low), ",", ".")
 	up = replace(CStr(up), ",", ".")
 
-	cmd = FSO.BuildPath(FSO.HomeFolder, "..\AppData\Local\ceres-noire\cn-0.2.0.exe") & " " & low & " " & up & " " & nstamps & " -s " & chr(34) & inventory & chr(34)
+	cmd = FSO.BuildPath(FSO.HomeFolder, "..\AppData\Local\ceres-noire\cn-0.3.0.exe") & " " & low & " " & up & " " & nstamps & " -s " & chr(34) & inventory & chr(34)
 	res = ShellRun(cmd)
 	splitted = SF_String.SplitLines(res)
 
