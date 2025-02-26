@@ -8,6 +8,7 @@ Stamps and collections of stamps.
 -}
 
 module Stamps (
+  precision,
   StampSet(..),
   totalValue,
   totalQuantity,
@@ -27,6 +28,10 @@ import Data.Text.Lazy.Encoding ( encodeUtf8 )
 import qualified Data.Vector as V
 import Numeric ( showFFloat )
 
+-- | The precision used for numerical comparison.
+precision :: Double
+precision = 1e-9
+
 -- | A set of similar stamps is defined by the unitary price of the
 -- stamp, and the quantity of stamps in the set. Both these quantities
 -- should be positive.
@@ -36,11 +41,11 @@ data StampSet = St { price :: Double
   deriving Show
 
 instance Eq StampSet where
-  x == y = (abs (price x - price y) < 1e-9)
+  x == y = (abs (price x - price y) < precision)
            && (abs (quantity x - quantity y) == 0)
 
 instance Ord StampSet where
-  compare x y = if abs (price x - price y) < 1e-9
+  compare x y = if abs (price x - price y) < precision
                 then compare (quantity x) (quantity y)
                 else compare (price x) (price y)
 
@@ -73,19 +78,19 @@ isStrictSubset s s' =
     go u = any og s'
       where
         og :: StampSet -> Bool
-        og v = ((abs (price u - price v) < 1e-9)) && (quantity u <= quantity v)
+        og v = ((abs (price u - price v) < precision)) && (quantity u <= quantity v)
 
 -- | Turn a collection into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation. The argument 'dp' is
 -- used to render the prices of the stamps as decimal values, and not integral
 -- ones.
 reprCollection :: Int -> [StampSet] -> String
-reprCollection precision xs =
-  showFFloat (Just precision) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
+reprCollection decimals xs =
+  showFFloat (Just decimals) (totalValue xs) $ " EUR (" ++ stamps ++ ")"
   where
     stamps = intercalate ", " (fmap go xs)
     go :: StampSet -> String
-    go u = (show (quantity u)) ++ "x at " ++ (showFFloat (Just precision) (price u) $ " EUR")
+    go u = (show (quantity u)) ++ "x at " ++ (showFFloat (Just decimals) (price u) $ " EUR")
 
 -- | Read a collection of stamps from a CSV-like bytestring.
 fromByteString :: Bool -> BL.ByteString -> Either String [StampSet]
@@ -99,7 +104,7 @@ fromByteString comma bs = case Csv.decodeByNameWith myOptions bs of
     go2 (x:xs) = x { quantity = quantity x + (foldr (\ y t -> quantity y + t) 0 xs) }
 
     go1 :: StampSet -> StampSet -> Bool
-    go1 x y = abs ((price x) - (price y)) < 1e-9
+    go1 x y = abs ((price x) - (price y)) < precision
 
     myOptions = if comma
       then Csv.defaultDecodeOptions { Csv.decDelimiter = fromIntegral (ord ',') }

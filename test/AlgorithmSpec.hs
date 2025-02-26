@@ -85,26 +85,24 @@ probGen n = do
 propTotalCost :: (Int, Double, Double, [StampSet]) -> Property
 propTotalCost (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
-    eps = 1e-9
     x' = abs x
     y' = x' + (abs y)
     n' = 1 + (abs n)
-    res = withinRange eps (Just n') x' y' inventory
+    res = withinRange (Just n') x' y' inventory
     ok = case res of
       Left _ -> False
       Right zs -> length zs > 0
     prop = case res of
       Left _ -> False -- Never happens in practice.
-      Right zs -> all (\ z -> (totalValue z) >= x' - eps && (totalValue z) <= y' + eps) zs
+      Right zs -> all (\ z -> (totalValue z) >= x' - precision && (totalValue z) <= y' + precision) zs
 
 propTotalQuantity :: (Int, Double, Double, [StampSet]) -> Property
 propTotalQuantity (n, x, y, inventory) = ok ==> cover 99 ok "non-trivial" prop
   where
-    eps = 1e-9
     x' = abs x
     y' = x' + (abs y)
     n' = 1 + (abs n)
-    res = withinRange eps (Just n') x' y' inventory
+    res = withinRange (Just n') x' y' inventory
     ok = case res of
       Left _ -> False
       Right zs -> length zs > 0
@@ -153,34 +151,34 @@ spec :: Spec
 spec = do
   describe "withinRange" $ do
     it "finds the sets of stamps whose total value lies within the given range (1)" $
-      (withinRange 1e-9 Nothing 2.80 2.90 sq1) `eitherShouldMatch` (Right sol1)
+      (withinRange Nothing 2.80 2.90 sq1) `eitherShouldMatch` (Right sol1)
 
     it "finds the sets of stamps whose total value lies within the given range (2)" $
-      (withinRange 1e-9 Nothing 2.32 2.33 sq2) `eitherShouldMatch` (Right sol2)
+      (withinRange Nothing 2.32 2.33 sq2) `eitherShouldMatch` (Right sol2)
 
     it "finds the sets of stamps whose total value lies within the given range (3)" $
-      (withinRange 1e-9 Nothing 8.00 10.00 sq2) `eitherShouldMatch` (Right sol3)
+      (withinRange Nothing 8.00 10.00 sq2) `eitherShouldMatch` (Right sol3)
 
     it "finds the sets of stamps whose total value lies within the given range (4)" $
-      (withinRange 1e-9 (Just 4) 8.00 10.00 sq2) `eitherShouldMatch` (Right sol4)
+      (withinRange (Just 4) 8.00 10.00 sq2) `eitherShouldMatch` (Right sol4)
 
     it "should fail if the cost of the letter is bigger than the total value of the inventory" $
-      (withinRange 1e-9 Nothing 11.00 11.00 sq1) `eitherShouldMatch` (Left "The problem is infeasible!")
+      (withinRange Nothing 11.00 11.00 sq1) `eitherShouldMatch` (Left "The problem is infeasible!")
 
     it "should fail if the maximal number of stamps is too low" $
-      (withinRange 1e-9 (Just 3) 8.00 10.00 sq2) `eitherShouldMatch` (Left "The problem is infeasible!")
+      (withinRange (Just 3) 8.00 10.00 sq2) `eitherShouldMatch` (Left "The problem is infeasible!")
 
     it "should always fail if the inventory is empty" $ property $
-      \ x -> ((withinRange 1e-9 Nothing (abs x) (1 + abs x) []) `eitherShouldMatch` (Left "The problem is infeasible!"))
+      \ x -> ((withinRange Nothing (abs x) (1 + abs x) []) `eitherShouldMatch` (Left "The problem is infeasible!"))
 
     it "should always fail if the minimum value is negative" $ property $
-      \ x -> ((withinRange 1e-9 Nothing (-(abs x) - 1) (abs x) []) `eitherShouldMatch` (Left "The minimum value should be a positive float!"))
+      \ x -> ((withinRange Nothing (-(abs x) - 1) (abs x) []) `eitherShouldMatch` (Left "The minimum value should be a positive float!"))
 
     it "should always fail if the maximum value is lower than the minimum value" $ property $
-      \ x -> ((withinRange 1e-9 Nothing ((abs x) + 10) ((abs x) + 5) []) `eitherShouldMatch` (Left "The maximum value should be greater than the minimum value!"))
+      \ x -> ((withinRange Nothing ((abs x) + 10) ((abs x) + 5) []) `eitherShouldMatch` (Left "The maximum value should be greater than the minimum value!"))
 
     it "should always fail if the maximal number of stamp is lower or equal to 0" $ property $
-      \ n x -> ((withinRange 1e-9 (Just (-(abs n))) (abs x) (abs (2 * x)) []) `eitherShouldMatch` (Left "The maximal number of stamps should be strictly positive!"))
+      \ n x -> ((withinRange (Just (-(abs n))) (abs x) (abs (2 * x)) []) `eitherShouldMatch` (Left "The maximal number of stamps should be strictly positive!"))
 
     it "should always give solutions (if they exist) with a cost greater or equal to the cost of the letter" $ property $
       forAll (probGen 5) propTotalCost

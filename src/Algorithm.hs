@@ -21,13 +21,12 @@ dropSupersets :: [[StampSet]] -> [[StampSet]]
 dropSupersets xs = filter (noStrictSubset xs) xs
 
 -- | Find the sets of stamps whose total value lies within the given range.
-withinRange :: Double
-            -> Maybe Int
+withinRange :: Maybe Int
             -> Double
             -> Double
             -> [StampSet]
             -> Either String [[StampSet]]
-withinRange tolerance mn low up inventory
+withinRange mn low up inventory
   | low < 0 = Left "The minimum value should be a positive float!"
   | up < low = Left "The maximum value should be greater than the minimum value!"
   | any (\ n -> n <= 0) mn = Left "The maximal number of stamps should be strictly positive!"
@@ -35,7 +34,7 @@ withinRange tolerance mn low up inventory
                 then Left "The problem is infeasible!"
                 else Right (sort res)
     where
-      res = solve mn (low - tolerance) (up + tolerance) inventory
+      res = solve mn (low - precision) (up + precision) inventory
 
 -- | The function that actually search the sets of stamps whose total
 -- value lies within the given range. Do not perform any check
@@ -81,4 +80,4 @@ mminus (Just x) y = Just (x - y)
 -- | Turn a list of collections into a human readable string. See also
 -- 'reprCollection'.
 reprCollections :: Int -> [[StampSet]] -> String
-reprCollections precision seqs = intercalate "\n" (toList $ fmap (reprCollection precision) seqs)
+reprCollections decimals seqs = intercalate "\n" (toList $ fmap (reprCollection decimals) seqs)
