@@ -62,7 +62,7 @@ totalQuantity xs = sum (fmap quantity xs)
 
 -- | `noSubset ss s` returns `True` if `s` has no strict subset in `ss`.
 noStrictSubset :: [[StampSet]] -> [StampSet] -> Bool
-noStrictSubset ss s = not (any (isStrictSubset' s) ss)
+noStrictSubset ss s = not (any ((flip isStrictSubset) s) ss)
 
 -- | `isStrictSubset s s'` returns `True` if `s` is a strict subset of `s'`.
 isStrictSubset :: [StampSet] -> [StampSet] -> Bool
@@ -74,12 +74,6 @@ isStrictSubset s s' =
       where
         og :: StampSet -> Bool
         og v = ((abs (price u - price v) < 1e-9)) && (quantity u <= quantity v)
-
--- | Same as `isStrictSubset`, but with the arguments reversed:
--- `isStrictSubset' s' s` returns `True` if `s` is a strict subset of
--- `s'`.
-isStrictSubset' :: [StampSet] -> [StampSet] -> Bool
-isStrictSubset' = flip isStrictSubset
 
 -- | Turn a collection into a human readable string. The resulting string is not
 -- exhaustive and should not be used for serialisation. The argument 'dp' is
